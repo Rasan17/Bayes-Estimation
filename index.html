@@ -186,9 +186,9 @@
               <span class="kpi-subtext">Probability of Superiority</span>
             </div>
             <div class="kpi-card">
-              <span class="kpi-label">Posterior Mean Diff (ARR)</span>
+              <span class="kpi-label">Risk Difference (ARR)</span>
               <span id="propKpiDiff" class="kpi-value">--</span>
-              <span class="kpi-subtext">p_Treatment − p_Control</span>
+              <span id="propKpiDiffCI" class="kpi-subtext">95% CI: [--, --]</span>
             </div>
             <div class="kpi-card">
               <span class="kpi-label">95% Highest Density (HDI)</span>
@@ -196,8 +196,9 @@
               <span class="kpi-subtext">Shortest 95% Credible Band</span>
             </div>
             <div class="kpi-card">
-              <span class="kpi-label">Standardized Effect Size (h)</span>
+              <span class="kpi-label">Standardized Effect Size (Cohen's h)</span>
               <span id="propKpiCohensH" class="kpi-value text-primary">--</span>
+              <span id="propKpiCohensHCI" class="kpi-subtext">95% CI: [--, --]</span>
               <span id="propKpiCohensHLabel" class="kpi-effect-badge">Effect Size</span>
             </div>
             <div class="kpi-card">
@@ -399,7 +400,7 @@
             <div class="kpi-card">
               <span class="kpi-label">Mean Difference (Δμ)</span>
               <span id="meansKpiDiff" class="kpi-value">--</span>
-              <span class="kpi-subtext">μ_Treatment − μ_Control</span>
+              <span id="meansKpiDiffCI" class="kpi-subtext">95% CI: [--, --]</span>
             </div>
             <div class="kpi-card">
               <span class="kpi-label">95% HDI Difference</span>
@@ -407,8 +408,9 @@
               <span class="kpi-subtext">Highest Density Interval</span>
             </div>
             <div class="kpi-card">
-              <span class="kpi-label">Standardized Effect Size (d)</span>
+              <span class="kpi-label">Standardized Effect Size (Cohen's d)</span>
               <span id="meansKpiCohensD" class="kpi-value text-primary">--</span>
+              <span id="meansKpiCohensDCI" class="kpi-subtext">95% CI: [--, --]</span>
               <span id="meansKpiCohensDLabel" class="kpi-effect-badge">Effect Size</span>
             </div>
             <div class="kpi-card">

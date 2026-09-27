@@ -557,6 +557,18 @@
       else if (absH >= 0.50) cohensHInterpretation = "Medium effect size (0.5 ≤ |h| < 0.8)";
       else if (absH >= 0.20) cohensHInterpretation = "Small effect size (0.2 ≤ |h| < 0.5)";
 
+      // Estimation Statistics: 95% Confidence Intervals for Cohen's h & Risk Difference
+      const seCohensH = Math.sqrt(1 / nA + 1 / nB);
+      const cohensHCI = {
+        low: cohensH - 1.96 * seCohensH,
+        high: cohensH + 1.96 * seCohensH
+      };
+      const seDiffProp = Math.sqrt((sampleRateA * (1 - sampleRateA)) / nA + (sampleRateB * (1 - sampleRateB)) / nB);
+      const diffCI = {
+        low: sampleDiff - 1.96 * seDiffProp,
+        high: sampleDiff + 1.96 * seDiffProp
+      };
+
       // 2. Bayesian Conjugate Posterior Updating
       const postAA = aA + kA;
       const postBA = bA + (nA - kA);
@@ -647,6 +659,9 @@
           rateA: sampleRateA,
           rateB: sampleRateB,
           diff: sampleDiff,
+          diffCI,
+          cohensH,
+          cohensHCI,
           rr: sampleRR,
           rrr: sampleRRR,
           or: sampleOR,
@@ -742,6 +757,30 @@
       else if (absD >= 0.80) cohensDInterpretation = "Large effect size (|d| ≥ 0.8)";
       else if (absD >= 0.50) cohensDInterpretation = "Medium effect size (0.5 ≤ |d| < 0.8)";
       else if (absD >= 0.20) cohensDInterpretation = "Small effect size (0.2 ≤ |d| < 0.5)";
+
+      // Estimation Statistics: Confidence Intervals for Cohen's d & Difference
+      const dfPooled = nA + nB - 2;
+      const jCorrection = 1 - (3 / (4 * Math.max(1, dfPooled) - 1));
+      const hedgesG = sampleCohensD * jCorrection;
+      const seCohensD = Math.sqrt((nA + nB) / (nA * nB) + (sampleCohensD * sampleCohensD) / (2 * (nA + nB)));
+      const cohensDCI = {
+        low: sampleCohensD - 1.96 * seCohensD,
+        high: sampleCohensD + 1.96 * seCohensD
+      };
+      const hedgesGCI = {
+        low: hedgesG - 1.96 * seCohensD * jCorrection,
+        high: hedgesG + 1.96 * seCohensD * jCorrection
+      };
+
+      const vA = (sdA * sdA) / nA;
+      const vB = (sdB * sdB) / nB;
+      const seWelch = Math.sqrt(vA + vB);
+      const dfWelch = Math.pow(vA + vB, 2) / ((vA * vA) / (nA - 1) + (vB * vB) / (nB - 1));
+      const tCritDiff = Distributions.studentTQuantile(0.975, Math.max(1, dfWelch), 0, 1);
+      const diffCI = {
+        low: sampleDiff - tCritDiff * seWelch,
+        high: sampleDiff + tCritDiff * seWelch
+      };
 
       // 2. Bayesian Estimation (BEST / t-test)
       const dfA = nA - 1;
@@ -846,7 +885,11 @@
         sampleStats: {
           meanA, meanB, sdA, sdB,
           diff: sampleDiff,
+          diffCI,
           cohensD: sampleCohensD,
+          cohensDCI,
+          hedgesG,
+          hedgesGCI,
           glassDelta,
           cles,
           cohensDInterpretation
@@ -1805,9 +1848,17 @@
       const elHdi = document.getElementById("propKpiHdi");
       if (elHdi) elHdi.textContent = `[${hdiLow}%, ${hdiHigh}%]`;
 
-      // Effect Size: Cohen's h
+      // Effect Size: Cohen's h & Confidence Interval
+      const elDiffCI = document.getElementById("propKpiDiffCI");
+      if (elDiffCI && res.sampleStats.diffCI) {
+        elDiffCI.textContent = `95% CI: [${(res.sampleStats.diffCI.low * 100).toFixed(1)}%, ${(res.sampleStats.diffCI.high * 100).toFixed(1)}%]`;
+      }
       const elCohensH = document.getElementById("propKpiCohensH");
       if (elCohensH) elCohensH.textContent = `h = ${res.sampleStats.cohensH.toFixed(3)}`;
+      const elCohensHCI = document.getElementById("propKpiCohensHCI");
+      if (elCohensHCI && res.sampleStats.cohensHCI) {
+        elCohensHCI.textContent = `95% CI: [${res.sampleStats.cohensHCI.low.toFixed(3)}, ${res.sampleStats.cohensHCI.high.toFixed(3)}]`;
+      }
       const elCohensHLabel = document.getElementById("propKpiCohensHLabel");
       if (elCohensHLabel) elCohensHLabel.textContent = res.sampleStats.cohensHInterpretation;
 
@@ -1947,8 +1998,16 @@ ROPE Clinical Equivalence [${(res.difference.rope.ropeLow*100).toFixed(1)}%, ${(
       const elHdi = document.getElementById("meansKpiHdi");
       if (elHdi) elHdi.textContent = `[${res.difference.hdi95.low.toFixed(2)}, ${res.difference.hdi95.high.toFixed(2)}]`;
 
+      const elMeansDiffCI = document.getElementById("meansKpiDiffCI");
+      if (elMeansDiffCI && res.sampleStats.diffCI) {
+        elMeansDiffCI.textContent = `95% CI: [${res.sampleStats.diffCI.low.toFixed(2)}, ${res.sampleStats.diffCI.high.toFixed(2)}]`;
+      }
       const elCohen = document.getElementById("meansKpiCohensD");
       if (elCohen) elCohen.textContent = `d = ${res.sampleStats.cohensD.toFixed(3)}`;
+      const elCohenCI = document.getElementById("meansKpiCohensDCI");
+      if (elCohenCI && res.sampleStats.cohensDCI) {
+        elCohenCI.textContent = `95% CI: [${res.sampleStats.cohensDCI.low.toFixed(3)}, ${res.sampleStats.cohensDCI.high.toFixed(3)}] (Hedges g: ${res.sampleStats.hedgesG.toFixed(3)})`;
+      }
       const elCohenLabel = document.getElementById("meansKpiCohensDLabel");
       if (elCohenLabel) elCohenLabel.textContent = res.sampleStats.cohensDInterpretation;
 
