@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bayes-Estimation — Bayesian A/B Testing & Parameter Estimation Suite</title>
+  <meta name="description" content="Ultra-premium zero-dependency Bayesian estimation, A/B testing, two-group comparison, Highest Density Intervals (HDI), ROPE, and clinical Fagan nomogram suite.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/design-system.css">
+  <link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+
+  <div class="app-container">
+
+    <!-- Header Bar -->
+    <header class="header-bar">
+      <div class="brand-section">
+        <div class="brand-logo">β</div>
+        <div>
+          <h1 class="brand-title">Bayes-Estimation</h1>
+          <p class="brand-subtitle">Interactive Bayesian A/B Testing, Two-Group Comparison & Parameter Estimation Suite</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button id="themeToggleBtn" class="btn btn-secondary" aria-label="Toggle theme">
+          <span>Theme</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Notice Banner -->
+    <div class="disclaimer-banner">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;">
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+        <line x1="12" y1="9" x2="12" y2="13"></line>
+        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+      </svg>
+      <div>
+        <strong>Notice</strong>: Bayes-Estimation is designed for clinical research, biostatistical exploratory data analysis, and teaching. All calculations execute locally with zero dependencies.
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <nav class="tabs-navigation" role="tablist">
+      <button class="tab-btn active" data-tab="twoProportions" role="tab">
+        <span>Two Proportions (A/B Testing)</span>
+        <span class="tab-badge">Primary</span>
+      </button>
+      <button class="tab-btn" data-tab="twoMeans" role="tab">
+        <span>Two Means (BEST t-Test)</span>
+      </button>
+      <button class="tab-btn" data-tab="singleProportion" role="tab">
+        <span>Single Proportion (Beta-Binomial)</span>
+      </button>
+      <button class="tab-btn" data-tab="singleMean" role="tab">
+        <span>Single Mean (Normal-Normal)</span>
+      </button>
+      <button class="tab-btn" data-tab="diagnostic" role="tab">
+        <span>Diagnostic Bayes & Nomogram</span>
+      </button>
+    </nav>
+
+    <!-- TAB 1: TWO PROPORTIONS (A/B TESTING) -->
+    <main id="panel-twoProportions" class="module-panel active">
+      <div class="panel-grid">
+
+        <!-- Controls Column -->
+        <div class="controls-column">
+          <!-- Presets Card -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Clinical Presets</span>
+            </div>
+            <div class="form-group">
+              <select id="presetTwoProp" class="input-field">
+                <option value="">-- Choose a Clinical Study Preset --</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Group A (Control) -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Group A (Control / Standard of Care)</span>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="propKA">Successes / Events (kₐ)</label>
+                <input type="number" id="propKA" class="input-field" value="58" min="0">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="propNA">Total Sample (nₐ)</label>
+                <input type="number" id="propNA" class="input-field" value="267" min="1">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="propPriorA">Prior Beta α</label>
+                <input type="number" id="propPriorA" class="input-field" value="1" min="0.001" step="0.5">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="propPriorA_b">Prior Beta β</label>
+                <input type="number" id="propPriorA_b" class="input-field" value="1" min="0.001" step="0.5">
+              </div>
+            </div>
+          </div>
+
+          <!-- Group B (Treatment) -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Group B (Treatment / Experimental)</span>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="propKB">Successes / Events (k_b)</label>
+                <input type="number" id="propKB" class="input-field" value="114" min="0">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="propNB">Total Sample (n_b)</label>
+                <input type="number" id="propNB" class="input-field" value="267" min="1">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="propPriorB">Prior Beta α</label>
+                <input type="number" id="propPriorB" class="input-field" value="1" min="0.001" step="0.5">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="propPriorB_b">Prior Beta β</label>
+                <input type="number" id="propPriorB_b" class="input-field" value="1" min="0.001" step="0.5">
+              </div>
+            </div>
+          </div>
+
+          <!-- Decision Rules & ROPE Card -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Clinical Equivalence (ROPE)</span>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="propRopeLow">ROPE Lower Limit</label>
+                <input type="number" id="propRopeLow" class="input-field" value="-0.03" step="0.01">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="propRopeHigh">ROPE Upper Limit</label>
+                <input type="number" id="propRopeHigh" class="input-field" value="0.03" step="0.01">
+              </div>
+            </div>
+            <button id="btnCalcTwoProp" class="btn btn-primary btn-block">Recalculate Estimation</button>
+          </div>
+        </div>
+
+        <!-- Results & Visualization Column -->
+        <div class="results-column">
+
+          <!-- KPI Cards -->
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <span class="kpi-label">P(Treatment > Control)</span>
+              <span id="propKpiProbSup" class="kpi-value text-primary">--</span>
+              <span class="kpi-subtext">Probability of Superiority</span>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-label">Mean Difference (ARR)</span>
+              <span id="propKpiDiff" class="kpi-value">--</span>
+              <span class="kpi-subtext">p_Treatment − p_Control</span>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-label">95% Highest Density (HDI)</span>
+              <span id="propKpiHdi" class="kpi-value" style="font-size:16px;">--</span>
+              <span class="kpi-subtext">Difference Credible Interval</span>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-label">Relative Risk (RR)</span>
+              <span id="propKpiRR" class="kpi-value" style="font-size:16px;">--</span>
+              <span class="kpi-subtext">Median (95% CrI)</span>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-label">Odds Ratio (OR)</span>
+              <span id="propKpiOR" class="kpi-value" style="font-size:16px;">--</span>
+              <span class="kpi-subtext">Median (95% CrI)</span>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-label">NNT</span>
+              <span id="propKpiNNT" class="kpi-value text-primary">--</span>
+              <span class="kpi-subtext">Number Needed to Treat</span>
+            </div>
+          </div>
+
+          <!-- ROPE Decision Banner -->
+          <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+              <div>
+                <span style="font-size:12px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">ROPE Decision Framework:</span>
+                <div id="propRopeDetail" style="font-size:13px; margin-top:4px; color:var(--text-main);">Evaluating clinical equivalence...</div>
+              </div>
+              <div id="propRopeBadge" class="status-badge status-neutral">Calculating...</div>
+            </div>
+            <div style="margin-top:12px; font-size:12px; color:var(--text-dim); border-top:1px solid var(--border-subtle); padding-top:8px;">
+              <span id="propBayesFactor">BF₁₀ Calculating...</span>
+            </div>
+          </div>
+
+          <!-- Canvas Chart -->
+          <div class="chart-wrapper">
+            <div class="chart-header">
+              <span class="chart-title">Posterior Distribution of Difference in Rates (95% HDI & ROPE)</span>
+              <button class="btn btn-secondary btn-sm btn-export-png" data-target-canvas="chartPropDiff">Save PNG</button>
+            </div>
+            <canvas id="chartPropDiff"></canvas>
+          </div>
+
+          <!-- Formatted Clinical Report -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Medical Journal / APA Bayesian Summary</span>
+              <button id="btnCopyReportTwoProp" class="btn btn-secondary btn-sm">Copy APA/Clinical Report</button>
+            </div>
+            <div id="reportTwoProp" class="report-box">Generating Bayesian clinical report...</div>
+          </div>
+
+        </div>
+      </div>
+    </main>
+
+    <!-- TAB 2: TWO CONTINUOUS MEANS (BEST / BAYESIAN t-TEST) -->
+    <main id="panel-twoMeans" class="module-panel">
+      <div class="panel-grid">
+
+        <!-- Controls Column -->
+        <div class="controls-column">
+          <!-- Presets -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Clinical Presets</span>
+            </div>
+            <div class="form-group">
+              <select id="presetTwoMeans" class="input-field">
+                <option value="">-- Choose a Continuous Endpoint Preset --</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Group A Summary -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Group A (Control)</span>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="meansMeanA">Mean (x̄ₐ)</label>
+                <input type="number" id="meansMeanA" class="input-field" value="21.4" step="0.1">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="meansSdA">Std Dev (sₐ)</label>
+                <input type="number" id="meansSdA" class="input-field" value="4.8" min="0.01" step="0.1">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="meansNA">Sample Size (nₐ)</label>
+              <input type="number" id="meansNA" class="input-field" value="64" min="2">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="meansRawDataA">Optional: Paste Raw Values (comma/space)</label>
+              <textarea id="meansRawDataA" class="input-field" placeholder="e.g. 21.2, 19.5, 23.1..."></textarea>
+            </div>
+          </div>
+
+          <!-- Group B Summary -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Group B (Treatment)</span>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="meansMeanB">Mean (x̄_b)</label>
+                <input type="number" id="meansMeanB" class="input-field" value="15.2" step="0.1">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="meansSdB">Std Dev (s_b)</label>
+                <input type="number" id="meansSdB" class="input-field" value="3.9" min="0.01" step="0.1">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="meansNB">Sample Size (n_b)</label>
+              <input type="number" id="meansNB" class="input-field" value="62" min="2">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="meansRawDataB">Optional: Paste Raw Values (comma/space)</label>
+              <textarea id="meansRawDataB" class="input-field" placeholder="e.g. 15.1, 14.8, 16.2..."></textarea>
+            </div>
+          </div>
+
+          <!-- Equivalence Margin (ROPE) -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">ROPE & JZS Prior</span>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="meansRopeLow">ROPE Lower Limit</label>
+                <input type="number" id="meansRopeLow" class="input-field" value="-1.0" step="0.1">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="meansRopeHigh">ROPE Upper Limit</label>
+                <input type="number" id="meansRopeHigh" class="input-field" value="1.0" step="0.1">
+              </div>
+            </div>
+            <button id="btnCalcTwoMeans" class="btn btn-primary btn-block">Recalculate Estimation</button>
+          </div>
+        </div>
+
+        <!-- Results Column -->
+        <div class="results-column">
+          <!-- KPI Cards -->
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <span class="kpi-label">P(Treatment > Control)</span>
+              <span id="meansKpiProbSup" class="kpi-value text-primary">--</span>
+              <span class="kpi-subtext">Probability of Superiority</span>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-label">Mean Difference (Δμ)</span>
+              <span id="meansKpiDiff" class="kpi-value">--</span>
+              <span class="kpi-subtext">μ_Treatment − μ_Control</span>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-label">95% HDI Difference</span>
+              <span id="meansKpiHdi" class="kpi-value" style="font-size:16px;">--</span>
+              <span class="kpi-subtext">Highest Density Interval</span>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-label">Bayesian Cohen's d</span>
+              <span id="meansKpiCohensD" class="kpi-value" style="font-size:16px;">--</span>
+              <span class="kpi-subtext">Standardized Effect Size</span>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-label">SD Ratio (σ_b / σₐ)</span>
+              <span id="meansKpiSdRatio" class="kpi-value" style="font-size:16px;">--</span>
+              <span class="kpi-subtext">Variance Heterogeneity</span>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-label">JZS Bayes Factor</span>
+              <span id="meansKpiBF" class="kpi-value text-primary" style="font-size:16px;">--</span>
+              <span class="kpi-subtext">Cauchy Prior scale r=0.707</span>
+            </div>
+          </div>
+
+          <!-- ROPE Badge -->
+          <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+              <div>
+                <span style="font-size:12px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">ROPE Decision Conclusion:</span>
+                <div id="meansRopeDetail" style="font-size:13px; margin-top:4px; color:var(--text-main);">Evaluating clinical equivalence...</div>
+              </div>
+              <div id="meansRopeBadge" class="status-badge status-neutral">Calculating...</div>
+            </div>
+          </div>
+
+          <!-- Charts -->
+          <div class="chart-wrapper">
+            <div class="chart-header">
+              <span class="chart-title">Posterior Distribution of Mean Difference (95% HDI & ROPE)</span>
+              <button class="btn btn-secondary btn-sm btn-export-png" data-target-canvas="chartMeansDiff">Save PNG</button>
+            </div>
+            <canvas id="chartMeansDiff"></canvas>
+          </div>
+
+          <div class="chart-wrapper">
+            <div class="chart-header">
+              <span class="chart-title">Posterior Distribution of Bayesian Cohen's d (Effect Size)</span>
+              <button class="btn btn-secondary btn-sm btn-export-png" data-target-canvas="chartMeansCohen">Save PNG</button>
+            </div>
+            <canvas id="chartMeansCohen"></canvas>
+          </div>
+
+          <!-- Report -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Medical Journal / APA Summary (BEST)</span>
+              <button id="btnCopyReportTwoMeans" class="btn btn-secondary btn-sm">Copy APA/Clinical Report</button>
+            </div>
+            <div id="reportTwoMeans" class="report-box">Generating report...</div>
+          </div>
+
+        </div>
+      </div>
+    </main>
+
+    <!-- TAB 3: SINGLE PROPORTION (BETA-BINOMIAL) -->
+    <main id="panel-singleProportion" class="module-panel">
+      <div class="panel-grid">
+        <div class="controls-column">
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Clinical Presets</span>
+            </div>
+            <div class="form-group">
+              <select id="presetSingleProp" class="input-field">
+                <option value="">-- Choose a Single Proportion Preset --</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Observed Cohort Data</span>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="spK">Successes / Events (k)</label>
+                <input type="number" id="spK" class="input-field" value="14" min="0">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="spN">Total Sample (n)</label>
+                <input type="number" id="spN" class="input-field" value="210" min="1">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="spBenchmark">Clinical Benchmark Rate (p₀)</label>
+              <input type="number" id="spBenchmark" class="input-field" value="0.10" step="0.01" min="0" max="1">
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Prior Belief Specification</span>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="spPriorA">Prior Beta α</label>
+                <input type="number" id="spPriorA" class="input-field" value="1" min="0.001" step="0.5">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="spPriorB">Prior Beta β</label>
+                <input type="number" id="spPriorB" class="input-field" value="15" min="0.001" step="0.5">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="results-column">
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <span class="kpi-label">Posterior Mean</span>
+              <span id="spKpiMean" class="kpi-value text-primary">--</span>
+              <span class="kpi-subtext">Estimated Proportion</span>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-label">95% HDI</span>
+              <span id="spKpiHdi" class="kpi-value" style="font-size:16px;">--</span>
+              <span class="kpi-subtext">Credible Interval</span>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-label">P(Rate > Benchmark)</span>
+              <span id="spKpiProbBench" class="kpi-value">--</span>
+              <span class="kpi-subtext">Probability Exceeding p₀</span>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-label">Posterior Distribution</span>
+              <span id="spKpiPostA" class="kpi-value" style="font-size:16px;">--</span>
+              <span class="kpi-subtext">Conjugate Beta Update</span>
+            </div>
+          </div>
+
+          <div class="chart-wrapper">
+            <div class="chart-header">
+              <span class="chart-title">Bayesian Tri-Plot: Prior (amber dashed), Likelihood (green dotted), Posterior (blue solid)</span>
+              <button class="btn btn-secondary btn-sm btn-export-png" data-target-canvas="chartSingleProp">Save PNG</button>
+            </div>
+            <canvas id="chartSingleProp"></canvas>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- TAB 4: SINGLE MEAN (NORMAL-NORMAL) -->
+    <main id="panel-singleMean" class="module-panel">
+      <div class="panel-grid">
+        <div class="controls-column">
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Observed Sample Data</span>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="smMean">Sample Mean (x̄)</label>
+                <input type="number" id="smMean" class="input-field" value="120" step="0.5">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="smSd">Sample SD (s)</label>
+                <input type="number" id="smSd" class="input-field" value="15" min="0.1" step="0.5">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="smN">Sample Size (n)</label>
+              <input type="number" id="smN" class="input-field" value="50" min="1">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="smBenchmark">Benchmark Target (μ₀)</label>
+              <input type="number" id="smBenchmark" class="input-field" value="120" step="0.5">
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Prior Belief</span>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="smPriorMean">Prior Mean (μₚ)</label>
+                <input type="number" id="smPriorMean" class="input-field" value="125" step="0.5">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="smPriorSd">Prior SD (σₚ)</label>
+                <input type="number" id="smPriorSd" class="input-field" value="10" min="0.1" step="0.5">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="results-column">
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <span class="kpi-label">Posterior Mean</span>
+              <span id="smKpiMean" class="kpi-value text-primary">--</span>
+              <span class="kpi-subtext">Weighted Estimate</span>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-label">95% Credible Interval</span>
+              <span id="smKpiHdi" class="kpi-value" style="font-size:16px;">--</span>
+              <span class="kpi-subtext">Highest Density Interval</span>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-label">P(Mean > Benchmark)</span>
+              <span id="smKpiProbBench" class="kpi-value">--</span>
+              <span class="kpi-subtext">Exceedance Probability</span>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-label">Posterior Precision</span>
+              <span id="smKpiPostSd" class="kpi-value" style="font-size:16px;">--</span>
+              <span class="kpi-subtext">Standard Deviation</span>
+            </div>
+          </div>
+
+          <div class="chart-wrapper">
+            <div class="chart-header">
+              <span class="chart-title">Continuous Mean Tri-Plot (Prior vs Data Likelihood vs Posterior)</span>
+              <button class="btn btn-secondary btn-sm btn-export-png" data-target-canvas="chartSingleMean">Save PNG</button>
+            </div>
+            <canvas id="chartSingleMean"></canvas>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- TAB 5: CLINICAL DIAGNOSTIC BAYES & FAGAN NOMOGRAM -->
+    <main id="panel-diagnostic" class="module-panel">
+      <div class="panel-grid">
+        <div class="controls-column">
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Diagnostic Presets</span>
+            </div>
+            <div class="form-group">
+              <select id="presetDiagnostic" class="input-field">
+                <option value="">-- Choose a Diagnostic Preset --</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Diagnostic Parameters</span>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="diagPreProb">Pre-Test Disease Probability (Prevalence)</label>
+              <input type="number" id="diagPreProb" class="input-field" value="0.40" min="0.001" max="0.999" step="0.05">
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="diagSens">Sensitivity</label>
+                <input type="number" id="diagSens" class="input-field" value="0.65" min="0.001" max="0.999" step="0.05">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="diagSpec">Specificity</label>
+                <input type="number" id="diagSpec" class="input-field" value="0.88" min="0.001" max="0.999" step="0.05">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="results-column">
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <span class="kpi-label">Likelihood Ratio (LR+)</span>
+              <span id="diagKpiPLR" class="kpi-value text-primary">--</span>
+              <span class="kpi-subtext">Positive Test LR</span>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-label">Likelihood Ratio (LR−)</span>
+              <span id="diagKpiNLR" class="kpi-value text-danger">--</span>
+              <span class="kpi-subtext">Negative Test LR</span>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-label">Post-Test Prob (+Test)</span>
+              <span id="diagKpiPostPos" class="kpi-value text-primary" style="font-size:16px;">--</span>
+              <span class="kpi-subtext">After Positive Test</span>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-label">Post-Test Prob (−Test)</span>
+              <span id="diagKpiPostNeg" class="kpi-value text-danger" style="font-size:16px;">--</span>
+              <span class="kpi-subtext">After Negative Test</span>
+            </div>
+          </div>
+
+          <div class="card" style="padding: 10px;">
+            <div id="nomogramSvgContainer"></div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Footer & Attribution -->
+    <footer class="app-footer">
+      <p style="margin-bottom: 6px;">
+        <strong>Bayes-Estimation</strong> — Designed & Developed for Clinical Biostatistics, Neurosurgery & Scientific Research.
+      </p>
+      <p style="margin-bottom: 4px; color: var(--text-dim); font-size: 12px;">
+        Conceived, supervised design and testing: <strong>Dr G Narenthiran</strong> MB ChB BSc(MedSci)(Hons) MRCS(Ed.) FEBNS FRCS(SN).
+      </p>
+      <p style="color: var(--text-dim); font-size: 12px;">
+        Dedicated to <strong>Mrs Nirmaladevy Ganesalingam BSc (mother)</strong>. Copyright © Dr G Narenthiran.
+      </p>
+    </footer>
+
+  </div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
