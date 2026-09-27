@@ -517,6 +517,108 @@
   };
 
   // =========================================================================
+  // 3b. BOOTSTRAP RESAMPLING ENGINE (ESTIMATION STATISTICS - GARDNER-ALTMAN / CUMMING)
+  // =========================================================================
+  const BootstrapEngine = {
+    B: 5000,
+
+    resampleProportions(kA, nA, kB, nB, B = 5000) {
+      const pA = kA / nA;
+      const pB = kB / nB;
+      const diffs = new Float64Array(B);
+      const hs = new Float64Array(B);
+
+      for (let b = 0; b < B; b++) {
+        let kA_star = 0;
+        for (let i = 0; i < nA; i++) if (Math.random() < pA) kA_star++;
+        let kB_star = 0;
+        for (let i = 0; i < nB; i++) if (Math.random() < pB) kB_star++;
+
+        const pA_star = kA_star / nA;
+        const pB_star = kB_star / nB;
+        diffs[b] = pB_star - pA_star;
+        hs[b] = 2 * (Math.asin(Math.sqrt(pB_star)) - Math.asin(Math.sqrt(pA_star)));
+      }
+
+      diffs.sort();
+      hs.sort();
+      const lowIdx = Math.floor(0.025 * B);
+      const highIdx = Math.min(B - 1, Math.floor(0.975 * B));
+
+      return {
+        diffCI: { low: diffs[lowIdx], high: diffs[highIdx] },
+        cohensHCI: { low: hs[lowIdx], high: hs[highIdx] },
+        iterations: B
+      };
+    },
+
+    resampleMeans(meanA, sdA, nA, meanB, sdB, nB, B = 5000) {
+      const sampleA = new Float64Array(nA);
+      const sampleB = new Float64Array(nB);
+
+      let sumA = 0, sumB = 0;
+      for (let i = 0; i < nA; i++) { sampleA[i] = MCMCSampler.randomNormal(0, 1); sumA += sampleA[i]; }
+      for (let i = 0; i < nB; i++) { sampleB[i] = MCMCSampler.randomNormal(0, 1); sumB += sampleB[i]; }
+
+      const rawMeanA = sumA / nA;
+      const rawMeanB = sumB / nB;
+
+      let varA = 0, varB = 0;
+      for (let i = 0; i < nA; i++) varA += Math.pow(sampleA[i] - rawMeanA, 2);
+      for (let i = 0; i < nB; i++) varB += Math.pow(sampleB[i] - rawMeanB, 2);
+
+      const rawSdA = Math.sqrt(varA / Math.max(1, nA - 1)) || 1;
+      const rawSdB = Math.sqrt(varB / Math.max(1, nB - 1)) || 1;
+
+      for (let i = 0; i < nA; i++) sampleA[i] = ((sampleA[i] - rawMeanA) / rawSdA) * sdA + meanA;
+      for (let i = 0; i < nB; i++) sampleB[i] = ((sampleB[i] - rawMeanB) / rawSdB) * sdB + meanB;
+
+      const diffs = new Float64Array(B);
+      const cohenDs = new Float64Array(B);
+      const hedgesGs = new Float64Array(B);
+      const dfPooled = nA + nB - 2;
+      const jCorrection = 1 - (3 / (4 * Math.max(1, dfPooled) - 1));
+
+      for (let b = 0; b < B; b++) {
+        let bSumA = 0, bSumB = 0;
+        for (let i = 0; i < nA; i++) bSumA += sampleA[Math.floor(Math.random() * nA)];
+        for (let i = 0; i < nB; i++) bSumB += sampleB[Math.floor(Math.random() * nB)];
+        const bMeanA = bSumA / nA;
+        const bMeanB = bSumB / nB;
+
+        let bVarA = 0, bVarB = 0;
+        for (let i = 0; i < nA; i++) bVarA += Math.pow(sampleA[Math.floor(Math.random() * nA)] - bMeanA, 2);
+        for (let i = 0; i < nB; i++) bVarB += Math.pow(sampleB[Math.floor(Math.random() * nB)] - bMeanB, 2);
+
+        const bSdA = Math.sqrt(bVarA / Math.max(1, nA - 1));
+        const bSdB = Math.sqrt(bVarB / Math.max(1, nB - 1));
+        const bDiff = bMeanB - bMeanA;
+        const bPooledVar = ((nA - 1) * bSdA * bSdA + (nB - 1) * bSdB * bSdB) / Math.max(1, dfPooled);
+        const bPooledSd = Math.sqrt(bPooledVar) || 1e-6;
+        const bD = bDiff / bPooledSd;
+
+        diffs[b] = bDiff;
+        cohenDs[b] = bD;
+        hedgesGs[b] = bD * jCorrection;
+      }
+
+      diffs.sort();
+      cohenDs.sort();
+      hedgesGs.sort();
+
+      const lowIdx = Math.floor(0.025 * B);
+      const highIdx = Math.min(B - 1, Math.floor(0.975 * B));
+
+      return {
+        diffCI: { low: diffs[lowIdx], high: diffs[highIdx] },
+        cohensDCI: { low: cohenDs[lowIdx], high: cohenDs[highIdx] },
+        hedgesGCI: { low: hedgesGs[lowIdx], high: hedgesGs[highIdx] },
+        iterations: B
+      };
+    }
+  };
+
+  // =========================================================================
   // 4. STATISTICAL MODULES (ESTIMATION & BAYESIAN ANALYSIS)
   // =========================================================================
   const TwoProportions = {
@@ -557,17 +659,10 @@
       else if (absH >= 0.50) cohensHInterpretation = "Medium effect size (0.5 ≤ |h| < 0.8)";
       else if (absH >= 0.20) cohensHInterpretation = "Small effect size (0.2 ≤ |h| < 0.5)";
 
-      // Estimation Statistics: 95% Confidence Intervals for Cohen's h & Risk Difference
-      const seCohensH = Math.sqrt(1 / nA + 1 / nB);
-      const cohensHCI = {
-        low: cohensH - 1.96 * seCohensH,
-        high: cohensH + 1.96 * seCohensH
-      };
-      const seDiffProp = Math.sqrt((sampleRateA * (1 - sampleRateA)) / nA + (sampleRateB * (1 - sampleRateB)) / nB);
-      const diffCI = {
-        low: sampleDiff - 1.96 * seDiffProp,
-        high: sampleDiff + 1.96 * seDiffProp
-      };
+      // Estimation Statistics: 5,000 Resample Bootstrap Confidence Intervals
+      const bootProp = BootstrapEngine.resampleProportions(kA, nA, kB, nB, 5000);
+      const cohensHCI = bootProp.cohensHCI;
+      const diffCI = bootProp.diffCI;
 
       // 2. Bayesian Conjugate Posterior Updating
       const postAA = aA + kA;
@@ -758,29 +853,15 @@
       else if (absD >= 0.50) cohensDInterpretation = "Medium effect size (0.5 ≤ |d| < 0.8)";
       else if (absD >= 0.20) cohensDInterpretation = "Small effect size (0.2 ≤ |d| < 0.5)";
 
-      // Estimation Statistics: Confidence Intervals for Cohen's d & Difference
+      // Estimation Statistics: 5,000 Resample Bootstrap Confidence Intervals (Gardner-Altman / Cumming)
       const dfPooled = nA + nB - 2;
       const jCorrection = 1 - (3 / (4 * Math.max(1, dfPooled) - 1));
       const hedgesG = sampleCohensD * jCorrection;
-      const seCohensD = Math.sqrt((nA + nB) / (nA * nB) + (sampleCohensD * sampleCohensD) / (2 * (nA + nB)));
-      const cohensDCI = {
-        low: sampleCohensD - 1.96 * seCohensD,
-        high: sampleCohensD + 1.96 * seCohensD
-      };
-      const hedgesGCI = {
-        low: hedgesG - 1.96 * seCohensD * jCorrection,
-        high: hedgesG + 1.96 * seCohensD * jCorrection
-      };
 
-      const vA = (sdA * sdA) / nA;
-      const vB = (sdB * sdB) / nB;
-      const seWelch = Math.sqrt(vA + vB);
-      const dfWelch = Math.pow(vA + vB, 2) / ((vA * vA) / (nA - 1) + (vB * vB) / (nB - 1));
-      const tCritDiff = Distributions.studentTQuantile(0.975, Math.max(1, dfWelch), 0, 1);
-      const diffCI = {
-        low: sampleDiff - tCritDiff * seWelch,
-        high: sampleDiff + tCritDiff * seWelch
-      };
+      const bootMeans = BootstrapEngine.resampleMeans(meanA, sdA, nA, meanB, sdB, nB, 5000);
+      const cohensDCI = bootMeans.cohensDCI;
+      const hedgesGCI = bootMeans.hedgesGCI;
+      const diffCI = bootMeans.diffCI;
 
       // 2. Bayesian Estimation (BEST / t-test)
       const dfA = nA - 1;
@@ -1851,13 +1932,13 @@
       // Effect Size: Cohen's h & Confidence Interval
       const elDiffCI = document.getElementById("propKpiDiffCI");
       if (elDiffCI && res.sampleStats.diffCI) {
-        elDiffCI.textContent = `95% CI: [${(res.sampleStats.diffCI.low * 100).toFixed(1)}%, ${(res.sampleStats.diffCI.high * 100).toFixed(1)}%]`;
+        elDiffCI.textContent = `95% Bootstrap CI: [${(res.sampleStats.diffCI.low * 100).toFixed(1)}%, ${(res.sampleStats.diffCI.high * 100).toFixed(1)}%]`;
       }
       const elCohensH = document.getElementById("propKpiCohensH");
       if (elCohensH) elCohensH.textContent = `h = ${res.sampleStats.cohensH.toFixed(3)}`;
       const elCohensHCI = document.getElementById("propKpiCohensHCI");
       if (elCohensHCI && res.sampleStats.cohensHCI) {
-        elCohensHCI.textContent = `95% CI: [${res.sampleStats.cohensHCI.low.toFixed(3)}, ${res.sampleStats.cohensHCI.high.toFixed(3)}]`;
+        elCohensHCI.textContent = `95% Bootstrap CI: [${res.sampleStats.cohensHCI.low.toFixed(3)}, ${res.sampleStats.cohensHCI.high.toFixed(3)}]`;
       }
       const elCohensHLabel = document.getElementById("propKpiCohensHLabel");
       if (elCohensHLabel) elCohensHLabel.textContent = res.sampleStats.cohensHInterpretation;
@@ -2000,13 +2081,13 @@ ROPE Clinical Equivalence [${(res.difference.rope.ropeLow*100).toFixed(1)}%, ${(
 
       const elMeansDiffCI = document.getElementById("meansKpiDiffCI");
       if (elMeansDiffCI && res.sampleStats.diffCI) {
-        elMeansDiffCI.textContent = `95% CI: [${res.sampleStats.diffCI.low.toFixed(2)}, ${res.sampleStats.diffCI.high.toFixed(2)}]`;
+        elMeansDiffCI.textContent = `95% Bootstrap CI: [${res.sampleStats.diffCI.low.toFixed(2)}, ${res.sampleStats.diffCI.high.toFixed(2)}]`;
       }
       const elCohen = document.getElementById("meansKpiCohensD");
       if (elCohen) elCohen.textContent = `d = ${res.sampleStats.cohensD.toFixed(3)}`;
       const elCohenCI = document.getElementById("meansKpiCohensDCI");
       if (elCohenCI && res.sampleStats.cohensDCI) {
-        elCohenCI.textContent = `95% CI: [${res.sampleStats.cohensDCI.low.toFixed(3)}, ${res.sampleStats.cohensDCI.high.toFixed(3)}] (Hedges g: ${res.sampleStats.hedgesG.toFixed(3)})`;
+        elCohenCI.textContent = `95% Bootstrap CI: [${res.sampleStats.cohensDCI.low.toFixed(3)}, ${res.sampleStats.cohensDCI.high.toFixed(3)}] (Hedges g: ${res.sampleStats.hedgesG.toFixed(3)})`;
       }
       const elCohenLabel = document.getElementById("meansKpiCohensDLabel");
       if (elCohenLabel) elCohenLabel.textContent = res.sampleStats.cohensDInterpretation;
@@ -2279,10 +2360,19 @@ ROPE Clinical Equivalence Verdict [${res.difference.rope.ropeLow}, ${res.differe
     }
   };
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", () => App.init());
-  } else {
-    App.init();
+  if (typeof module !== "undefined" && module.exports) {
+    module.exports = {
+      SpecialFunctions, Distributions, MCMCSampler, BootstrapEngine,
+      TwoProportions, TwoMeans, SingleProportion, SingleMean, DiagnosticNomogram
+    };
+  }
+
+  if (typeof document !== "undefined") {
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", () => App.init());
+    } else {
+      App.init();
+    }
   }
 
 })();

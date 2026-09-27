@@ -3,14 +3,19 @@
  * Validates special functions, distributions, MCMC sampler, HDI, ROPE, and statistical modules.
  */
 
-import { SpecialFunctions } from "./js/math/special-functions.js";
-import { Distributions } from "./js/math/distributions.js";
-import { MCMCSampler } from "./js/math/mcmc-sampler.js";
-import { TwoProportions } from "./js/modules/two-proportions.js";
-import { TwoMeans } from "./js/modules/two-means.js";
-import { SingleProportion } from "./js/modules/single-proportion.js";
-import { SingleMean } from "./js/modules/single-mean.js";
-import { DiagnosticNomogram } from "./js/modules/diagnostic-nomogram.js";
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
+const {
+  SpecialFunctions,
+  Distributions,
+  MCMCSampler,
+  BootstrapEngine,
+  TwoProportions,
+  TwoMeans,
+  SingleProportion,
+  SingleMean,
+  DiagnosticNomogram
+} = require("./js/bayes-estimation.js");
 
 let testsRun = 0;
 let testsPassed = 0;
@@ -119,6 +124,19 @@ assertClose(diagResult.nlr, 0.222222, 1e-4, "Negative Likelihood Ratio (LR-) is 
 assertClose(diagResult.postTestPositive.prob, 2 / 3, 1e-4, "Post-test probability given positive test is ~ 66.7%");
 // Post odds(-) = 0.25 * (2/9) = 1/18 -> Post prob(-) = (1/18) / (19/18) = 1/19 ~ 0.0526
 assertClose(diagResult.postTestNegative.prob, 1 / 19, 1e-4, "Post-test probability given negative test is ~ 5.26%");
+
+// 7. Estimation Statistics Bootstrap Resampling (Gardner-Altman / DABEST)
+console.log("\n7. Estimation Statistics Bootstrap Resampling (Gardner-Altman / DABEST / Cumming):");
+assert(meansResult.sampleStats.cohensDCI !== undefined, "Sample stats contains Cohen's d Bootstrap CI");
+assert(meansResult.sampleStats.cohensDCI.low < meansResult.sampleStats.cohensD &&
+       meansResult.sampleStats.cohensD < meansResult.sampleStats.cohensDCI.high,
+       "Cohen's d point estimate is strictly bounded within 95% Bootstrap CI");
+assert(meansResult.sampleStats.diffCI.low < meansResult.sampleStats.diff &&
+       meansResult.sampleStats.diff < meansResult.sampleStats.diffCI.high,
+       "Mean difference is strictly bounded within 95% Bootstrap CI");
+assert(propResult.sampleStats.cohensHCI.low < propResult.sampleStats.cohensH &&
+       propResult.sampleStats.cohensH < propResult.sampleStats.cohensHCI.high,
+       "Cohen's h is strictly bounded within 95% Bootstrap CI");
 
 console.log("\n================================================================================");
 console.log(`Results: ${testsPassed} / ${testsRun} tests passed (${Math.round(testsPassed/testsRun*100)}%)`);
