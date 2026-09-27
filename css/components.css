@@ -691,3 +691,30 @@ select.input-field {
 [data-theme="dark"] .rope-example code {
   background: rgba(255, 255, 255, 0.1);
 }
+
+/* Separate Section Headers for Estimation Statistics vs Bayesian Analysis */
+.interp-section-title {
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  margin-top: 16px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.interp-section-green {
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: var(--calc-header);
+}
+
+.interp-section-blue {
+  background: rgba(2, 132, 199, 0.12);
+  border: 1px solid rgba(2, 132, 199, 0.35);
+  color: var(--stats-header);
+}

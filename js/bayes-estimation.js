@@ -1971,6 +1971,10 @@
       }
 
       // Update dynamic interpretation guide text
+      const elIntArr = document.getElementById("interpPropArr");
+      if (elIntArr) elIntArr.textContent = `${diffPct > 0 ? "+" : ""}${diffPct}% (95% Bootstrap CI: [${(res.sampleStats.diffCI.low * 100).toFixed(1)}%, ${(res.sampleStats.diffCI.high * 100).toFixed(1)}%])`;
+      const elIntBF = document.getElementById("interpPropBF");
+      if (elIntBF) elIntBF.textContent = res.bayesFactor.bf10.toFixed(2);
       const elIntSup = document.getElementById("interpPropSup");
       if (elIntSup) elIntSup.textContent = `${pctSup}%`;
       const elIntHdi = document.getElementById("interpPropHdi");
@@ -2113,9 +2117,9 @@ ROPE Clinical Equivalence [${(res.difference.rope.ropeLow*100).toFixed(1)}%, ${(
 
       // Update dynamic interpretation guide
       const elIntDiff = document.getElementById("interpMeansDiff");
-      if (elIntDiff) elIntDiff.textContent = `${res.difference.mean.toFixed(2)} units (95% HDI [${res.difference.hdi95.low.toFixed(2)}, ${res.difference.hdi95.high.toFixed(2)}])`;
+      if (elIntDiff) elIntDiff.textContent = `${res.difference.mean > 0 ? "+" : ""}${res.difference.mean.toFixed(2)} units (95% Bootstrap CI: [${res.sampleStats.diffCI.low.toFixed(2)}, ${res.sampleStats.diffCI.high.toFixed(2)}])`;
       const elIntD = document.getElementById("interpMeansD");
-      if (elIntD) elIntD.textContent = `${res.sampleStats.cohensD.toFixed(3)} (${res.sampleStats.cohensDInterpretation})`;
+      if (elIntD) elIntD.textContent = `d = ${res.sampleStats.cohensD.toFixed(3)} [95% Bootstrap CI: ${res.sampleStats.cohensDCI.low.toFixed(3)}, ${res.sampleStats.cohensDCI.high.toFixed(3)}] (${res.sampleStats.cohensDInterpretation})`;
       const elIntCles = document.getElementById("interpMeansCles");
       if (elIntCles) elIntCles.textContent = `${(res.sampleStats.cles * 100).toFixed(1)}%`;
       const elIntBF = document.getElementById("interpMeansBF");

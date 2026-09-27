@@ -260,26 +260,56 @@
             <div class="interpretation-header">
               <span class="interpretation-title">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-                Clinical & Statistical Interpretation Guide
+                Methodological Interpretation Guide: What Results Mean & What They Do NOT Mean
               </span>
+            </div>
+
+            <!-- SECTION 1: ESTIMATION STATISTICS (GREEN) -->
+            <div class="interp-section-title interp-section-green">
+              <span>🟢 1. Estimation Statistics Method (Bootstrap CIs & Effect Sizes)</span>
             </div>
             <div class="interpretation-grid">
               <div class="interp-box interp-means">
-                <div class="interp-box-title">✓ What These Results Mean</div>
+                <div class="interp-box-title">✓ What Estimation Statistics Means</div>
                 <ul>
-                  <li><strong>Probability of Superiority:</strong> There is a direct <span id="interpPropSup">--</span> posterior probability that Treatment B produces a higher success rate than Control A, conditional on the data and prior.</li>
-                  <li><strong>95% Highest Density Interval (HDI):</strong> The shortest range containing 95% of the posterior credibility. There is a 95% probability that the true difference lies between <span id="interpPropHdi">--</span>.</li>
-                  <li><strong>Standardized Effect Size (Cohen's h):</strong> Measures difference on a variance-stabilized scale (<span id="interpPropH">--</span>). Unlike absolute percentages, Cohen's h allows direct comparison across trials with different baseline rates.</li>
-                  <li><strong>Number Needed to Treat (NNT):</strong> On average, treating <span id="interpPropNnt">--</span> patients with Intervention B rather than Control A results in one additional successful outcome.</li>
+                  <li><strong>Risk Difference (ARR):</strong> The direct empirical difference in observed success rates is <strong><span id="interpPropArr">--</span></strong>.</li>
+                  <li><strong>95% Bootstrap Confidence Interval:</strong> Over 5,000 resamples with replacement, 95% of generated intervals contain the true effect size. Its width reflects sampling precision without assuming Gaussian normality.</li>
+                  <li><strong>Standardized Effect Size (Cohen's h):</strong> Standardized arcsine difference of <strong><span id="interpPropH">--</span></strong> allows unbiased comparison across trials regardless of baseline event rates.</li>
+                  <li><strong>Number Needed to Treat (NNT):</strong> On average, treating <strong><span id="interpPropNnt">--</span></strong> patients with Intervention B rather than Control A produces one additional successful outcome.</li>
                 </ul>
               </div>
               <div class="interp-box interp-not-means">
-                <div class="interp-box-title">✗ What These Results Do NOT Mean</div>
+                <div class="interp-box-title">✗ What Estimation Statistics Does NOT Mean</div>
                 <ul>
-                  <li><strong>Not a Frequentist P-Value:</strong> This does NOT represent the probability of observing extreme data under a hypothetical null hypothesis. Bayesian analysis yields the direct probability of the clinical parameter itself.</li>
-                  <li><strong>Superiority is NOT Clinical Significance:</strong> A high probability of superiority (even >99%) does NOT prove the treatment is clinically worthwhile if the absolute difference is tiny. This is why the ROPE margin is essential.</li>
-                  <li><strong>ROPE Overlap is NOT "Proof of Equivalence":</strong> If the 95% HDI overlaps the ROPE boundary, it does NOT prove the treatments are equal. It simply means the study is inconclusive (underpowered) to confirm either equivalence or superiority.</li>
-                  <li><strong>Odds Ratio is NOT Relative Risk:</strong> In diseases where events are common (>10%), the Odds Ratio (<span id="interpPropOR">--</span>) noticeably overstates the Relative Risk (<span id="interpPropRR">--</span>). Do not describe an OR of 2.0 as "doubling the risk".</li>
+                  <li><strong>NOT a Bayesian Parameter Probability:</strong> A 95% Bootstrap CI does NOT mean there is a 95% probability the true parameter is inside it. That is the Bayesian HDI! Frequentist CIs describe long-run procedure coverage.</li>
+                  <li><strong>Crossing Zero is NOT Proof of Equality:</strong> If the 95% CI includes zero, it does NOT prove the treatments are equal. It simply means the study had insufficient sample size to rule out zero.</li>
+                  <li><strong>Cohen's h Does NOT Dictate Clinical Value:</strong> A "small" effect size (h = 0.2) in a fatal outcome is lifesaving, whereas a "large" effect size in a minor side effect is clinically unimportant.</li>
+                  <li><strong>Odds Ratio is NOT Relative Risk:</strong> If event rates are high (&gt;10%), the Odds Ratio (<span id="interpPropOR">--</span>) noticeably overstates the Relative Risk (<span id="interpPropRR">--</span>).</li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- SECTION 2: BAYESIAN ANALYSIS (BLUE) -->
+            <div class="interp-section-title interp-section-blue">
+              <span>🔵 2. Bayesian Analysis Method (Posterior Credibility & Decisions)</span>
+            </div>
+            <div class="interpretation-grid">
+              <div class="interp-box interp-means">
+                <div class="interp-box-title">✓ What Bayesian Analysis Means</div>
+                <ul>
+                  <li><strong>Probability of Superiority:</strong> There is a direct <strong><span id="interpPropSup">--</span></strong> posterior probability that Treatment B is superior to Control A, conditional on prior clinical belief and data.</li>
+                  <li><strong>95% Highest Density Interval (HDI):</strong> The narrowest credible range: there is an actual 95% probability that the true difference lies between <strong><span id="interpPropHdi">--</span></strong>.</li>
+                  <li><strong>ROPE Clinical Decision:</strong> Explicitly evaluates whether the credible difference is practically superior, practically equivalent, or inconclusive relative to the minimal important margin.</li>
+                  <li><strong>Bayes Factor (BF₁₀):</strong> The data are <strong><span id="interpPropBF">--</span></strong> times more probable under the hypothesis of a difference than under strict equality.</li>
+                </ul>
+              </div>
+              <div class="interp-box interp-not-means">
+                <div class="interp-box-title">✗ What Bayesian Analysis Does NOT Mean</div>
+                <ul>
+                  <li><strong>NOT a Frequentist P-Value:</strong> P(Superiority) = 99% does NOT equal (1 - p). It is a direct posterior belief update.</li>
+                  <li><strong>Superiority Does NOT Mean 100% Patient Benefit:</strong> Even when P(B &gt; A) is 99%, individual patient responses vary due to biological dispersion.</li>
+                  <li><strong>ROPE Overlap is NOT Proof of Equivalence:</strong> Equivalence is confirmed ONLY if the full 95% HDI lies strictly inside the ROPE. Overlap indicates an inconclusive/underpowered study.</li>
+                  <li><strong>BF is NOT the Posterior Probability of H₁:</strong> The Bayes Factor is an evidence multiplier (likelihood ratio); it only equals posterior odds if prior odds were 50:50.</li>
                 </ul>
               </div>
             </div>
@@ -472,26 +502,56 @@
             <div class="interpretation-header">
               <span class="interpretation-title">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-                Clinical & Statistical Interpretation Guide
+                Methodological Interpretation Guide: What Results Mean & What They Do NOT Mean
               </span>
+            </div>
+
+            <!-- SECTION 1: ESTIMATION STATISTICS (GREEN) -->
+            <div class="interp-section-title interp-section-green">
+              <span>🟢 1. Estimation Statistics Method (Bootstrap CIs & Effect Sizes)</span>
             </div>
             <div class="interpretation-grid">
               <div class="interp-box interp-means">
-                <div class="interp-box-title">✓ What These Results Mean</div>
+                <div class="interp-box-title">✓ What Estimation Statistics Means</div>
                 <ul>
-                  <li><strong>Mean Difference:</strong> The expected shift in continuous clinical endpoint between Treatment B and Control A is <span id="interpMeansDiff">--</span>.</li>
-                  <li><strong>Bayesian Cohen's d:</strong> Standardized effect size of <span id="interpMeansD">--</span> expresses the magnitude of separation in terms of standard deviation units.</li>
-                  <li><strong>Common Language Effect Size (CLES):</strong> There is a <span id="interpMeansCles">--</span> probability that a randomly chosen patient from Group B will score higher than a randomly chosen patient from Group A.</li>
-                  <li><strong>Bayes Factor (BF₁₀):</strong> The data are <span id="interpMeansBF">--</span> times more probable under the hypothesis of a real difference than under the hypothesis of zero difference.</li>
+                  <li><strong>Unstandardized Mean Difference:</strong> Point estimate in native clinical units: <strong><span id="interpMeansDiff">--</span></strong>.</li>
+                  <li><strong>95% Bootstrap Confidence Interval:</strong> 5,000 resamples with replacement produce an empirical, distribution-free interval for the difference and standardized effect size.</li>
+                  <li><strong>Standardized Effect Size (Cohen's d & Hedges' g):</strong> Standardized effect of <strong><span id="interpMeansD">--</span></strong> measures separation in pooled standard deviation units.</li>
+                  <li><strong>Common Language Effect Size (CLES):</strong> There is a <strong><span id="interpMeansCles">--</span></strong> probability that a randomly chosen patient from Group B will score higher than a randomly chosen patient from Group A.</li>
                 </ul>
               </div>
               <div class="interp-box interp-not-means">
-                <div class="interp-box-title">✗ What These Results Do NOT Mean</div>
+                <div class="interp-box-title">✗ What Estimation Statistics Does NOT Mean</div>
                 <ul>
-                  <li><strong>Does NOT Guarantee All Patients Improve:</strong> Even with a substantial positive effect size, individual patient response varies due to biological heterogeneity; overlap between groups remains.</li>
-                  <li><strong>Standardized Effect Does NOT Replace Clinical Judgment:</strong> A "small" Cohen's d (e.g. 0.25) in a fatal condition (e.g. reducing mortality or stroke deficit) can be lifesaving, while a "large" Cohen's d in a minor laboratory biomarker may have zero clinical significance.</li>
-                  <li><strong>ROPE Overlap is NOT Proof of Equivalence:</strong> Equivalence is confirmed ONLY if the full 95% HDI lies completely within the ROPE boundaries.</li>
-                  <li><strong>BF₁₀ is NOT the Probability of H₁:</strong> The Bayes Factor is a likelihood ratio comparing models; it does not represent the absolute probability of the alternative hypothesis unless prior odds were 50:50.</li>
+                  <li><strong>NOT a Parameter Probability:</strong> A frequentist Bootstrap CI describes the long-run coverage of the resampling procedure, NOT the probability that the true parameter is within this specific interval.</li>
+                  <li><strong>Small Effect is NOT Clinically Useless:</strong> A "small" Cohen's d (0.2) in a critical endpoint (e.g. stroke deficit or mortality) can be practice-changing.</li>
+                  <li><strong>Wide CI Spanning Zero is NOT Equivalence:</strong> Crossing zero merely indicates insufficient power to demonstrate an effect (absence of evidence != evidence of absence).</li>
+                  <li><strong>Does NOT Guarantee Every Individual Improves:</strong> Group-level mean separation does not eliminate individual response variation.</li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- SECTION 2: BAYESIAN ANALYSIS (BLUE) -->
+            <div class="interp-section-title interp-section-blue">
+              <span>🔵 2. Bayesian Analysis Method (Posterior Credibility & Decisions)</span>
+            </div>
+            <div class="interpretation-grid">
+              <div class="interp-box interp-means">
+                <div class="interp-box-title">✓ What Bayesian Analysis Means</div>
+                <ul>
+                  <li><strong>Posterior Probability Distribution:</strong> Complete Bayesian probability updating for group means, unequal variances, and difference parameters.</li>
+                  <li><strong>95% Highest Density Interval (HDI):</strong> There is an actual 95% probability that the true population difference lies within this exact range.</li>
+                  <li><strong>ROPE Clinical Verdict:</strong> Directly determines if the posterior probability distribution lies completely outside (superiority) or completely inside (practical equivalence) the clinical threshold.</li>
+                  <li><strong>Bayes Factor (BF₁₀):</strong> The data are <strong><span id="interpMeansBF">--</span></strong> times more likely under H₁ than under H₀.</li>
+                </ul>
+              </div>
+              <div class="interp-box interp-not-means">
+                <div class="interp-box-title">✗ What Bayesian Analysis Does NOT Mean</div>
+                <ul>
+                  <li><strong>NOT a P-Value:</strong> Bayesian posterior probability does not reference hypothetical unobserved data under a null hypothesis.</li>
+                  <li><strong>ROPE Overlap is NOT Proof of Equivalence:</strong> Overlapping the ROPE margin means the clinical trial is inconclusive, NOT that the treatments are identical.</li>
+                  <li><strong>BF₁₀ is NOT the Probability of H₁:</strong> The Bayes Factor is a likelihood multiplier, not the posterior probability of the hypothesis itself.</li>
+                  <li><strong>Prior Sensitivity:</strong> In small trials, posterior conclusions can be influenced by strong priors; testing robust/skeptical priors is essential.</li>
                 </ul>
               </div>
             </div>
