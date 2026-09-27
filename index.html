@@ -47,7 +47,7 @@
         <span class="legend-swatch swatch-blue"></span>
         <div>
           <span class="legend-title">Light Sky Blue Panels:</span>
-          <span class="legend-desc"><strong>Bayesian Analysis</strong> (Prior belief parameters, full posterior distributions, 95% Highest Density Intervals [HDI], ROPE equivalence, and Bayes Factors)</span>
+          <span class="legend-desc"><strong>Bayesian Analysis</strong> (Prior belief parameters, full posterior distributions, 95% Highest Density Intervals [HDI], ROPE [Region of Practical Equivalence] decisions, and Bayes Factors)</span>
         </div>
       </div>
     </div>
@@ -160,7 +160,18 @@
                 <input type="number" id="propRopeHigh" class="input-field" value="0.03" step="0.01">
               </div>
             </div>
-            <button id="btnCalcTwoProp" class="btn btn-primary btn-block">Recalculate Bayesian Analysis</button>
+            <div class="rope-info-box">
+              <div class="rope-info-header">
+                <span>ℹ️</span> <strong>What is ROPE? (Region of Practical Equivalence)</strong>
+              </div>
+              <p class="rope-info-text">
+                <strong>ROPE</strong> defines an interval around zero difference that represents <em>clinical indifference</em> or practical equivalence. In classical testing, any microscopic difference can achieve <em>p &lt; 0.05</em> simply with large sample sizes. ROPE guarantees that we only declare superiority if the credible difference exceeds this threshold.
+              </p>
+              <div class="rope-example">
+                <strong>Clinical Example:</strong> If reducing 30-day complication rates by less than &plusmn;3% (<code>-0.03</code> to <code>+0.03</code>) does not change patient management, setting ROPE to <code>[-0.03, +0.03]</code> tests whether the treatment is clinically superior, practically equivalent, or inconclusive.
+              </div>
+            </div>
+            <button id="btnCalcTwoProp" class="btn btn-primary btn-block" style="margin-top:12px;">Recalculate Bayesian Analysis</button>
           </div>
         </div>
 
@@ -361,7 +372,18 @@
                 <input type="number" id="meansRopeHigh" class="input-field" value="1.0" step="0.1">
               </div>
             </div>
-            <button id="btnCalcTwoMeans" class="btn btn-primary btn-block">Recalculate Bayesian Analysis</button>
+            <div class="rope-info-box">
+              <div class="rope-info-header">
+                <span>ℹ️</span> <strong>What is ROPE? (Region of Practical Equivalence)</strong>
+              </div>
+              <p class="rope-info-text">
+                <strong>ROPE</strong> defines the boundary below which continuous differences are considered clinically trivial (e.g., within measurement noise or below the Minimal Clinically Important Difference [MCID]).
+              </p>
+              <div class="rope-example">
+                <strong>Clinical Example:</strong> On a 0–10 visual analog pain scale, a score change of &plusmn;0.5 to &plusmn;1.0 point is often imperceptible to patients. Setting ROPE to <code>[-1.0, +1.0]</code> prevents declaring an undetectable pain reduction as meaningful superiority.
+              </div>
+            </div>
+            <button id="btnCalcTwoMeans" class="btn btn-primary btn-block" style="margin-top:12px;">Recalculate Bayesian Analysis</button>
           </div>
         </div>
 
