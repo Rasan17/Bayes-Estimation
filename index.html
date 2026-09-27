@@ -895,11 +895,43 @@
       <p style="margin-bottom: 4px; color: var(--text-dim); font-size: 12px;">
         Conceived, supervised design and testing: <strong>Dr G Narenthiran</strong> MB ChB BSc(MedSci)(Hons) MRCS(Ed.) FEBNS FRCS(SN).
       </p>
-      <p style="color: var(--text-dim); font-size: 12px;">
+      <p style="margin-bottom: 4px; color: var(--text-dim); font-size: 12px;">
         Dedicated to <strong>Mrs Nirmaladevy Ganesalingam BSc (mother)</strong>. Copyright © Dr G Narenthiran.
+      </p>
+      <p style="margin-top: 8px; color: #f87171; font-weight: 700; font-size: 11.5px;">
+        *** Please do not use the software for Clinical or research purposes or for decision making ***
       </p>
     </footer>
 
+  </div>
+
+  <!-- Testing / AI Vibe Coding Disclaimer Pop-up Window (Statis-Gravity Match) -->
+  <div id="disclaimerModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="disclaimerHeading">
+    <div class="modal-card">
+      <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+        <span style="font-size: 1.6rem; line-height: 1;">⚠️</span>
+        <h3 id="disclaimerHeading"
+          style="font-size: 1.15rem; font-weight: 700; color: #f59e0b; margin: 0;">Notice</h3>
+      </div>
+      <div style="font-size: 0.95rem; line-height: 1.65; color: var(--text-main); margin-bottom: 1.5rem;">
+        <p style="margin: 0 0 0.85rem 0; font-weight: 500;">
+          The &lsquo;Bayes-Estimation&rsquo; is a companion statistical software for Statis (<a
+            href="https://rasan17.github.io/statis-28/" target="_blank" rel="noopener noreferrer"
+            style="color: var(--teal-accent, #06b6d4); text-decoration: underline; word-break: break-all;">https://rasan17.github.io/statis-28/</a>).
+          The calculations on this software are primarily for prospective studies, data exploration and teaching.
+        </p>
+        <p style="margin: 0; font-weight: 700; color: #f87171;">
+          *** Please do not use the software for Clinical or research purposes or for decision making ***
+        </p>
+      </div>
+      <div style="display: flex; justify-content: flex-end;">
+        <button id="disclaimerDismissBtn" class="btn btn-primary"
+          onclick="document.getElementById('disclaimerModal')?.classList.add('hidden');"
+          style="padding: 0.55rem 1.6rem; font-weight: 600; cursor: pointer;">
+          I Understand
+        </button>
+      </div>
+    </div>
   </div>
 
   <!-- Unified standalone script: Zero external dependencies, runs flawlessly in file:// protocol -->

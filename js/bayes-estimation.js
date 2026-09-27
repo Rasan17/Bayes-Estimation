@@ -1769,6 +1769,19 @@
           setTimeout(() => this.redrawActiveCharts(), 50);
         });
       }
+
+      // Disclaimer modal interactions (Escape key or backdrop click)
+      const modal = document.getElementById("disclaimerModal");
+      if (modal) {
+        modal.addEventListener("click", (e) => {
+          if (e.target === modal) modal.classList.add("hidden");
+        });
+        document.addEventListener("keydown", (e) => {
+          if (e.key === "Escape" && !modal.classList.contains("hidden")) {
+            modal.classList.add("hidden");
+          }
+        });
+      }
     },
 
     setupTabs() {
