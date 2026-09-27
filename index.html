@@ -15,12 +15,15 @@
 
   <div class="app-container">
 
-    <!-- Header Bar -->
+    <!-- Header Bar with Attribution directly under the Title -->
     <header class="header-bar">
       <div class="brand-section">
         <div class="brand-logo">β</div>
         <div>
           <h1 class="brand-title">Bayes-Estimation</h1>
+          <div class="brand-attribution">
+            Conceived, supervised design and testing: <strong>Dr G Narenthiran</strong> MB ChB BSc(MedSci)(Hons) MRCS(Ed.) FEBNS FRCS(SN), <a href="mailto:g_narenthiran@hotmail.com">g_narenthiran@hotmail.com</a>
+          </div>
           <p class="brand-subtitle">Interactive Bayesian A/B Testing, Two-Group Comparison & Parameter Estimation Suite</p>
         </div>
       </div>
@@ -39,38 +42,40 @@
         <line x1="12" y1="17" x2="12.01" y2="17"></line>
       </svg>
       <div>
-        <strong>Notice</strong>: Bayes-Estimation is designed for clinical research, biostatistical exploratory data analysis, and teaching. All calculations execute locally with zero dependencies.
+        <strong>Notice</strong>: Bayes-Estimation is designed for clinical research, biostatistical exploratory data analysis, and teaching. All calculations execute locally with zero external dependencies.
       </div>
     </div>
 
     <!-- Navigation Tabs -->
     <nav class="tabs-navigation" role="tablist">
-      <button class="tab-btn active" data-tab="twoProportions" role="tab">
+      <button class="tab-btn active" data-tab="twoProportions" role="tab" id="tabBtn-twoProportions">
         <span>Two Proportions (A/B Testing)</span>
         <span class="tab-badge">Primary</span>
       </button>
-      <button class="tab-btn" data-tab="twoMeans" role="tab">
+      <button class="tab-btn" data-tab="twoMeans" role="tab" id="tabBtn-twoMeans">
         <span>Two Means (BEST t-Test)</span>
       </button>
-      <button class="tab-btn" data-tab="singleProportion" role="tab">
+      <button class="tab-btn" data-tab="singleProportion" role="tab" id="tabBtn-singleProportion">
         <span>Single Proportion (Beta-Binomial)</span>
       </button>
-      <button class="tab-btn" data-tab="singleMean" role="tab">
+      <button class="tab-btn" data-tab="singleMean" role="tab" id="tabBtn-singleMean">
         <span>Single Mean (Normal-Normal)</span>
       </button>
-      <button class="tab-btn" data-tab="diagnostic" role="tab">
+      <button class="tab-btn" data-tab="diagnostic" role="tab" id="tabBtn-diagnostic">
         <span>Diagnostic Bayes & Nomogram</span>
       </button>
     </nav>
 
-    <!-- TAB 1: TWO PROPORTIONS (A/B TESTING) -->
+    <!-- ========================================================================= -->
+    <!-- TAB 1: TWO PROPORTIONS (A/B TESTING)                                      -->
+    <!-- ========================================================================= -->
     <main id="panel-twoProportions" class="module-panel active">
       <div class="panel-grid">
 
-        <!-- Controls Column -->
+        <!-- Calculation Dialogues Column (Light Green Theme) -->
         <div class="controls-column">
           <!-- Presets Card -->
-          <div class="card">
+          <div class="card calc-dialogue-card">
             <div class="card-header">
               <span class="card-title">Clinical Presets</span>
             </div>
@@ -82,7 +87,7 @@
           </div>
 
           <!-- Group A (Control) -->
-          <div class="card">
+          <div class="card calc-dialogue-card">
             <div class="card-header">
               <span class="card-title">Group A (Control / Standard of Care)</span>
             </div>
@@ -109,7 +114,7 @@
           </div>
 
           <!-- Group B (Treatment) -->
-          <div class="card">
+          <div class="card calc-dialogue-card">
             <div class="card-header">
               <span class="card-title">Group B (Treatment / Experimental)</span>
             </div>
@@ -136,7 +141,7 @@
           </div>
 
           <!-- Decision Rules & ROPE Card -->
-          <div class="card">
+          <div class="card calc-dialogue-card">
             <div class="card-header">
               <span class="card-title">Clinical Equivalence (ROPE)</span>
             </div>
@@ -154,7 +159,7 @@
           </div>
         </div>
 
-        <!-- Results & Visualization Column -->
+        <!-- Estimation Statistics Column (Light Sky Blue Theme) -->
         <div class="results-column">
 
           <!-- KPI Cards -->
@@ -192,15 +197,15 @@
           </div>
 
           <!-- ROPE Decision Banner -->
-          <div class="card">
+          <div class="card estimation-stats-card">
             <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
               <div>
-                <span style="font-size:12px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">ROPE Decision Framework:</span>
+                <span style="font-size:12px; font-weight:700; color:var(--stats-header); text-transform:uppercase;">ROPE Decision Framework:</span>
                 <div id="propRopeDetail" style="font-size:13px; margin-top:4px; color:var(--text-main);">Evaluating clinical equivalence...</div>
               </div>
               <div id="propRopeBadge" class="status-badge status-neutral">Calculating...</div>
             </div>
-            <div style="margin-top:12px; font-size:12px; color:var(--text-dim); border-top:1px solid var(--border-subtle); padding-top:8px;">
+            <div style="margin-top:12px; font-size:12px; color:var(--text-dim); border-top:1px solid var(--stats-border); padding-top:8px;">
               <span id="propBayesFactor">BF₁₀ Calculating...</span>
             </div>
           </div>
@@ -215,7 +220,7 @@
           </div>
 
           <!-- Formatted Clinical Report -->
-          <div class="card">
+          <div class="card estimation-stats-card">
             <div class="card-header">
               <span class="card-title">Medical Journal / APA Bayesian Summary</span>
               <button id="btnCopyReportTwoProp" class="btn btn-secondary btn-sm">Copy APA/Clinical Report</button>
@@ -227,14 +232,16 @@
       </div>
     </main>
 
-    <!-- TAB 2: TWO CONTINUOUS MEANS (BEST / BAYESIAN t-TEST) -->
+    <!-- ========================================================================= -->
+    <!-- TAB 2: TWO CONTINUOUS MEANS (BEST / BAYESIAN t-TEST)                      -->
+    <!-- ========================================================================= -->
     <main id="panel-twoMeans" class="module-panel">
       <div class="panel-grid">
 
-        <!-- Controls Column -->
+        <!-- Calculation Dialogues Column (Light Green Theme) -->
         <div class="controls-column">
           <!-- Presets -->
-          <div class="card">
+          <div class="card calc-dialogue-card">
             <div class="card-header">
               <span class="card-title">Clinical Presets</span>
             </div>
@@ -246,7 +253,7 @@
           </div>
 
           <!-- Group A Summary -->
-          <div class="card">
+          <div class="card calc-dialogue-card">
             <div class="card-header">
               <span class="card-title">Group A (Control)</span>
             </div>
@@ -271,7 +278,7 @@
           </div>
 
           <!-- Group B Summary -->
-          <div class="card">
+          <div class="card calc-dialogue-card">
             <div class="card-header">
               <span class="card-title">Group B (Treatment)</span>
             </div>
@@ -296,7 +303,7 @@
           </div>
 
           <!-- Equivalence Margin (ROPE) -->
-          <div class="card">
+          <div class="card calc-dialogue-card">
             <div class="card-header">
               <span class="card-title">ROPE & JZS Prior</span>
             </div>
@@ -314,7 +321,7 @@
           </div>
         </div>
 
-        <!-- Results Column -->
+        <!-- Estimation Statistics Column (Light Sky Blue Theme) -->
         <div class="results-column">
           <!-- KPI Cards -->
           <div class="kpi-grid">
@@ -351,10 +358,10 @@
           </div>
 
           <!-- ROPE Badge -->
-          <div class="card">
+          <div class="card estimation-stats-card">
             <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
               <div>
-                <span style="font-size:12px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">ROPE Decision Conclusion:</span>
+                <span style="font-size:12px; font-weight:700; color:var(--stats-header); text-transform:uppercase;">ROPE Decision Conclusion:</span>
                 <div id="meansRopeDetail" style="font-size:13px; margin-top:4px; color:var(--text-main);">Evaluating clinical equivalence...</div>
               </div>
               <div id="meansRopeBadge" class="status-badge status-neutral">Calculating...</div>
@@ -379,7 +386,7 @@
           </div>
 
           <!-- Report -->
-          <div class="card">
+          <div class="card estimation-stats-card">
             <div class="card-header">
               <span class="card-title">Medical Journal / APA Summary (BEST)</span>
               <button id="btnCopyReportTwoMeans" class="btn btn-secondary btn-sm">Copy APA/Clinical Report</button>
@@ -391,11 +398,13 @@
       </div>
     </main>
 
-    <!-- TAB 3: SINGLE PROPORTION (BETA-BINOMIAL) -->
+    <!-- ========================================================================= -->
+    <!-- TAB 3: SINGLE PROPORTION (BETA-BINOMIAL)                                  -->
+    <!-- ========================================================================= -->
     <main id="panel-singleProportion" class="module-panel">
       <div class="panel-grid">
         <div class="controls-column">
-          <div class="card">
+          <div class="card calc-dialogue-card">
             <div class="card-header">
               <span class="card-title">Clinical Presets</span>
             </div>
@@ -406,7 +415,7 @@
             </div>
           </div>
 
-          <div class="card">
+          <div class="card calc-dialogue-card">
             <div class="card-header">
               <span class="card-title">Observed Cohort Data</span>
             </div>
@@ -426,7 +435,7 @@
             </div>
           </div>
 
-          <div class="card">
+          <div class="card calc-dialogue-card">
             <div class="card-header">
               <span class="card-title">Prior Belief Specification</span>
             </div>
@@ -478,11 +487,13 @@
       </div>
     </main>
 
-    <!-- TAB 4: SINGLE MEAN (NORMAL-NORMAL) -->
+    <!-- ========================================================================= -->
+    <!-- TAB 4: SINGLE MEAN (NORMAL-NORMAL)                                        -->
+    <!-- ========================================================================= -->
     <main id="panel-singleMean" class="module-panel">
       <div class="panel-grid">
         <div class="controls-column">
-          <div class="card">
+          <div class="card calc-dialogue-card">
             <div class="card-header">
               <span class="card-title">Observed Sample Data</span>
             </div>
@@ -506,7 +517,7 @@
             </div>
           </div>
 
-          <div class="card">
+          <div class="card calc-dialogue-card">
             <div class="card-header">
               <span class="card-title">Prior Belief</span>
             </div>
@@ -558,11 +569,13 @@
       </div>
     </main>
 
-    <!-- TAB 5: CLINICAL DIAGNOSTIC BAYES & FAGAN NOMOGRAM -->
+    <!-- ========================================================================= -->
+    <!-- TAB 5: CLINICAL DIAGNOSTIC BAYES & FAGAN NOMOGRAM                         -->
+    <!-- ========================================================================= -->
     <main id="panel-diagnostic" class="module-panel">
       <div class="panel-grid">
         <div class="controls-column">
-          <div class="card">
+          <div class="card calc-dialogue-card">
             <div class="card-header">
               <span class="card-title">Diagnostic Presets</span>
             </div>
@@ -573,7 +586,7 @@
             </div>
           </div>
 
-          <div class="card">
+          <div class="card calc-dialogue-card">
             <div class="card-header">
               <span class="card-title">Diagnostic Parameters</span>
             </div>
@@ -618,7 +631,7 @@
             </div>
           </div>
 
-          <div class="card" style="padding: 10px;">
+          <div class="card estimation-stats-card" style="padding: 10px;">
             <div id="nomogramSvgContainer"></div>
           </div>
         </div>
@@ -640,6 +653,7 @@
 
   </div>
 
-  <script type="module" src="js/app.js"></script>
+  <!-- Unified standalone script: Zero external dependencies, runs flawlessly in file:// protocol -->
+  <script src="js/bayes-estimation.js"></script>
 </body>
 </html>
