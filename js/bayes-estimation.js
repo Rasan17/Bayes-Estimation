@@ -1647,8 +1647,8 @@
       const lineNegColor = isDark ? "#f43f5e" : "#e11d48";
 
       const width = 640;
-      const height = 460;
-      const margin = { top: 40, bottom: 40, left: 70, right: 70 };
+      const height = 500;
+      const margin = { top: 68, bottom: 44, left: 75, right: 88 };
       const axisH = height - margin.top - margin.bottom;
 
       const minProb = 0.001, maxProb = 0.999;
@@ -1681,14 +1681,14 @@
       const lrTicks = [1000, 500, 200, 100, 50, 20, 10, 5, 2, 1, 0.5, 0.2, 0.1, 0.05, 0.02, 0.01, 0.005, 0.002, 0.001];
 
       let svg = `<svg viewBox="0 0 ${width} ${height}" class="fagan-nomogram-svg" style="width: 100%; height: auto; font-family: system-ui, -apple-system, sans-serif;">
-        <text x="${width/2}" y="22" text-anchor="middle" font-size="14" font-weight="700" fill="${textBright}">Bayesian Clinical Fagan Nomogram</text>
+        <text x="${width/2}" y="25" text-anchor="middle" font-size="14.5" font-weight="800" fill="${textBright}" letter-spacing="0.02em">Bayesian Clinical Fagan Nomogram</text>
         <line x1="${xPre}" y1="${margin.top}" x2="${xPre}" y2="${margin.top + axisH}" stroke="${strokeColor}" stroke-width="2" />
         <line x1="${xLR}" y1="${margin.top}" x2="${xLR}" y2="${margin.top + axisH}" stroke="${strokeColor}" stroke-width="2" />
         <line x1="${xPost}" y1="${margin.top}" x2="${xPost}" y2="${margin.top + axisH}" stroke="${strokeColor}" stroke-width="2" />
 
-        <text x="${xPre}" y="${margin.top - 12}" text-anchor="middle" font-size="12" font-weight="600" fill="${textBright}">Pre-Test Prob</text>
-        <text x="${xLR}" y="${margin.top - 12}" text-anchor="middle" font-size="12" font-weight="600" fill="${textBright}">Likelihood Ratio</text>
-        <text x="${xPost}" y="${margin.top - 12}" text-anchor="middle" font-size="12" font-weight="600" fill="${textBright}">Post-Test Prob</text>
+        <text x="${xPre}" y="${margin.top - 14}" text-anchor="middle" font-size="12" font-weight="700" fill="${textBright}">Pre-Test Prob</text>
+        <text x="${xLR}" y="${margin.top - 14}" text-anchor="middle" font-size="12" font-weight="700" fill="${textBright}">Likelihood Ratio</text>
+        <text x="${xPost}" y="${margin.top - 14}" text-anchor="middle" font-size="12" font-weight="700" fill="${textBright}">Post-Test Prob</text>
       `;
 
       for (const p of probTicks) {
@@ -1715,12 +1715,12 @@
         <circle cx="${xPre}" cy="${yPre}" r="5" fill="${linePosColor}" />
         <circle cx="${xLR}" cy="${yPosLR}" r="5" fill="${linePosColor}" />
         <circle cx="${xPost}" cy="${yPostPos}" r="6" fill="${linePosColor}" />
-        <text x="${xPost + 42}" y="${yPostPos + 4}" font-size="11" font-weight="700" fill="${linePosColor}">+Test: ${(postProbPos * 100).toFixed(1)}%</text>
+        <text x="${xPost + 14}" y="${yPostPos + 4}" font-size="11" font-weight="700" fill="${linePosColor}">+Test: ${(postProbPos * 100).toFixed(1)}%</text>
 
         <line x1="${xPre}" y1="${yPre}" x2="${xPost}" y2="${yPostNeg}" stroke="${lineNegColor}" stroke-width="2.5" stroke-dasharray="6,4" stroke-linecap="round" opacity="0.9" />
         <circle cx="${xLR}" cy="${yNegLR}" r="4" fill="${lineNegColor}" />
         <circle cx="${xPost}" cy="${yPostNeg}" r="5" fill="${lineNegColor}" />
-        <text x="${xPost + 42}" y="${yPostNeg + 4}" font-size="11" font-weight="700" fill="${lineNegColor}">−Test: ${(postProbNeg * 100).toFixed(1)}%</text>
+        <text x="${xPost + 14}" y="${yPostNeg + 4}" font-size="11" font-weight="700" fill="${lineNegColor}">−Test: ${(postProbNeg * 100).toFixed(1)}%</text>
       </svg>`;
 
       container.innerHTML = svg;
