@@ -214,7 +214,6 @@
       if (x === 0) return a < 1 ? Infinity : (a === 1 ? b : 0);
       if (x === 1) return b < 1 ? Infinity : (b === 1 ? a : 0);
       if (a <= 0 || b <= 0) return 0;
-
       const logP = (a - 1) * Math.log(x) + (b - 1) * Math.log(1 - x) - SpecialFunctions.lnBeta(a, b);
       return Math.exp(logP);
     },
@@ -279,12 +278,6 @@
         t -= err / pdf;
       }
       return loc + scale * t;
-    },
-
-    cauchyPDF(x, loc = 0, scale = 1) {
-      if (scale <= 0) return 0;
-      const z = (x - loc) / scale;
-      return 1 / (Math.PI * scale * (1 + z * z));
     }
   };
 
@@ -414,7 +407,7 @@
       const pctAbove = (countAbove / n) * 100;
 
       let decision = "Undecided / Data Inconclusive";
-      let decisionDetail = "The 95% HDI overlaps the ROPE boundary. More samples or narrower clinical equivalence margins required.";
+      let decisionDetail = "The 95% HDI overlaps the ROPE boundary. More clinical trial samples or narrower equivalence margins required.";
       let statusClass = "status-neutral";
 
       if (hdi95.low > ropeHigh) {
@@ -449,7 +442,6 @@
       const q25 = sortedSamples[Math.floor(0.25 * n)];
       const q75 = sortedSamples[Math.floor(0.75 * n)];
       const iqr = (q75 - q25) || sd;
-
       const h = 0.9 * Math.min(sd, iqr / 1.34) * Math.pow(n, -0.2) || 1e-3;
 
       if (xMin === null) xMin = sortedSamples[0] - 3 * h;
@@ -525,13 +517,13 @@
   };
 
   // =========================================================================
-  // 4. MODULES
+  // 4. STATISTICAL MODULES (ESTIMATION & BAYESIAN ANALYSIS)
   // =========================================================================
   const TwoProportions = {
     analyze({
       kA, nA, aA = 1, bA = 1,
       kB, nB, aB = 1, bB = 1,
-      ropeLow = -0.05, ropeHigh = 0.05,
+      ropeLow = -0.03, ropeHigh = 0.03,
       numSamples = 40000
     }) {
       kA = Math.max(0, parseInt(kA, 10) || 0);
@@ -547,6 +539,25 @@
       aB = Math.max(0.001, parseFloat(aB) || 1);
       bB = Math.max(0.001, parseFloat(bB) || 1);
 
+      // 1. Estimation Statistics: Sample Rates & Effect Sizes
+      const sampleRateA = kA / nA;
+      const sampleRateB = kB / nB;
+      const sampleDiff = sampleRateB - sampleRateA;
+      const sampleRR = sampleRateA > 0 ? sampleRateB / sampleRateA : Infinity;
+      const sampleRRR = sampleRateA > 0 ? ((sampleRateB - sampleRateA) / sampleRateA) * 100 : 0;
+      const sampleOddsA = sampleRateA / Math.max(1e-7, 1 - sampleRateA);
+      const sampleOddsB = sampleRateB / Math.max(1e-7, 1 - sampleRateB);
+      const sampleOR = sampleOddsA > 0 ? sampleOddsB / sampleOddsA : Infinity;
+
+      // Standardized Effect Size: Cohen's h = 2 * (arcsin(sqrt(pB)) - arcsin(sqrt(pA)))
+      const cohensH = 2 * (Math.asin(Math.sqrt(sampleRateB)) - Math.asin(Math.sqrt(sampleRateA)));
+      const absH = Math.abs(cohensH);
+      let cohensHInterpretation = "Negligible effect";
+      if (absH >= 0.80) cohensHInterpretation = "Large effect size (|h| ≥ 0.8)";
+      else if (absH >= 0.50) cohensHInterpretation = "Medium effect size (0.5 ≤ |h| < 0.8)";
+      else if (absH >= 0.20) cohensHInterpretation = "Small effect size (0.2 ≤ |h| < 0.5)";
+
+      // 2. Bayesian Conjugate Posterior Updating
       const postAA = aA + kA;
       const postBA = bA + (nA - kA);
       const postAB = aB + kB;
@@ -570,6 +581,7 @@
         high: Distributions.betaQuantile(0.975, postAB, postBB)
       };
 
+      // Monte Carlo joint sampling
       const diffSamples = new Float64Array(numSamples);
       const rrSamples = new Float64Array(numSamples);
       const orSamples = new Float64Array(numSamples);
@@ -610,12 +622,13 @@
       const absDiff = Math.abs(diffSummary.mean);
       const nnt = absDiff > 1e-5 ? (1 / absDiff) : Infinity;
 
+      // Savage-Dickey Bayes Factor
       const priorSimN = 20000;
       const priorDeltaSamples = new Float64Array(priorSimN);
       for (let i = 0; i < priorSimN; i++) {
-        const priorA = MCMCSampler.randomBeta(aA, bA);
-        const priorB = MCMCSampler.randomBeta(aB, bB);
-        priorDeltaSamples[i] = priorB - priorA;
+        const pA = MCMCSampler.randomBeta(aA, bA);
+        const pB = MCMCSampler.randomBeta(aB, bB);
+        priorDeltaSamples[i] = pB - pA;
       }
       const priorDeltaSorted = priorDeltaSamples.sort();
       const priorKde = MCMCSampler.estimateKDE(priorDeltaSorted, 50, -0.1, 0.1);
@@ -630,6 +643,16 @@
       const bayesFactor = MCMCSampler.savageDickeyBF(priorDensityAtNull, diffSummary.sorted, 0);
 
       return {
+        sampleStats: {
+          rateA: sampleRateA,
+          rateB: sampleRateB,
+          diff: sampleDiff,
+          rr: sampleRR,
+          rrr: sampleRRR,
+          or: sampleOR,
+          cohensH,
+          cohensHInterpretation
+        },
         groupA: { kA, nA, prior: { a: aA, b: bA }, posterior: { a: postAA, b: postBA }, mean: meanA, mode: modeA, sd: sdA, cri95: cri95A },
         groupB: { kB, nB, prior: { a: aB, b: bB }, posterior: { a: postAB, b: postBB }, mean: meanB, mode: modeB, sd: sdB, cri95: cri95B },
         difference: {
@@ -703,6 +726,24 @@
       sdA = Math.max(1e-6, parseFloat(sdA) || 1);
       sdB = Math.max(1e-6, parseFloat(sdB) || 1);
 
+      // 1. Estimation Statistics: Sample Effect Sizes
+      const sampleDiff = meanB - meanA;
+      const pooledVar = ((nA - 1) * sdA * sdA + (nB - 1) * sdB * sdB) / (nA + nB - 2);
+      const pooledSd = Math.sqrt(pooledVar);
+      const sampleCohensD = sampleDiff / pooledSd;
+      const glassDelta = sampleDiff / sdA;
+
+      // Common Language Effect Size (CLES) = probability that random draw B > random draw A
+      const cles = Distributions.normalCDF(sampleCohensD / Math.SQRT2, 0, 1);
+
+      const absD = Math.abs(sampleCohensD);
+      let cohensDInterpretation = "Negligible effect";
+      if (absD >= 1.20) cohensDInterpretation = "Very large effect (|d| ≥ 1.2)";
+      else if (absD >= 0.80) cohensDInterpretation = "Large effect size (|d| ≥ 0.8)";
+      else if (absD >= 0.50) cohensDInterpretation = "Medium effect size (0.5 ≤ |d| < 0.8)";
+      else if (absD >= 0.20) cohensDInterpretation = "Small effect size (0.2 ≤ |d| < 0.5)";
+
+      // 2. Bayesian Estimation (BEST / t-test)
       const dfA = nA - 1;
       const dfB = nB - 1;
       const semA = sdA / Math.sqrt(nA);
@@ -736,8 +777,8 @@
         diffSamples[i] = diff;
         if (diff > 0) superiorCount++;
 
-        const pooledSd = Math.sqrt((varA_sample + varB_sample) / 2);
-        cohenSamples[i] = diff / pooledSd;
+        const currentPooledSd = Math.sqrt((varA_sample + varB_sample) / 2);
+        cohenSamples[i] = diff / currentPooledSd;
         sdRatioSamples[i] = sigmaB_sample / sigmaA_sample;
       }
 
@@ -758,8 +799,8 @@
       const sdRatioSummary = MCMCSampler.summarize(sdRatioSamples);
       const sdRatioHdi95 = MCMCSampler.computeHDI(sdRatioSummary.sorted, 0.95);
 
-      const pooledVarClassic = ((nA - 1) * sdA * sdA + (nB - 1) * sdB * sdB) / (nA + nB - 2);
-      const tClassic = (meanB - meanA) / Math.sqrt(pooledVarClassic * (1 / nA + 1 / nB));
+      // Rouder et al. (2009) JZS Bayes Factor
+      const tClassic = sampleDiff / Math.sqrt(pooledVar * (1 / nA + 1 / nB));
       const dfTotal = nA + nB - 2;
       const nEff = (nA * nB) / (nA + nB);
 
@@ -802,6 +843,14 @@
       else bfInterpretation = "Extreme evidence for equality (H₀)";
 
       return {
+        sampleStats: {
+          meanA, meanB, sdA, sdB,
+          diff: sampleDiff,
+          cohensD: sampleCohensD,
+          glassDelta,
+          cles,
+          cohensDInterpretation
+        },
         groupA: { n: nA, mean: meanA, sd: sdA, sem: semA, df: dfA, cri95: cri95A },
         groupB: { n: nB, mean: meanB, sd: sdB, sem: semB, df: dfB, cri95: cri95B },
         difference: {
@@ -840,6 +889,10 @@
       priorA = Math.max(0.001, parseFloat(priorA) || 1);
       priorB = Math.max(0.001, parseFloat(priorB) || 1);
       benchmark = Math.max(0, Math.min(1, parseFloat(benchmark) || 0.50));
+
+      const sampleRate = k / n;
+      const effectDiff = sampleRate - benchmark;
+      const effectH = 2 * (Math.asin(Math.sqrt(sampleRate)) - Math.asin(Math.sqrt(benchmark)));
 
       const postA = priorA + k;
       const postB = priorB + (n - k);
@@ -882,7 +935,7 @@
       }
 
       return {
-        k, n,
+        k, n, sampleRate, effectDiff, effectH,
         prior: { a: priorA, b: priorB },
         posterior: { a: postA, b: postB, mean: postMean, mode: postMode, sd: postSd, cri95, hdi95 },
         benchmark: { value: benchmark, probExceed: probExceedBenchmark },
@@ -899,6 +952,9 @@
       priorMean = parseFloat(priorMean) || 0;
       priorSd = Math.max(1e-6, parseFloat(priorSd) || 10);
       benchmark = parseFloat(benchmark) || 0;
+
+      const effectDiff = sampleMean - benchmark;
+      const effectD = effectDiff / sampleSd;
 
       const sampleSem = sampleSd / Math.sqrt(sampleN);
       const tauPrior = 1 / (priorSd * priorSd);
@@ -934,7 +990,7 @@
       }
 
       return {
-        sample: { mean: sampleMean, sd: sampleSd, n: sampleN, sem: sampleSem },
+        sample: { mean: sampleMean, sd: sampleSd, n: sampleN, sem: sampleSem, effectDiff, effectD },
         prior: { mean: priorMean, sd: priorSd },
         posterior: { mean: postMean, sd: postSd, cri95, hdi95: cri95 },
         benchmark: { value: benchmark, probExceed },
@@ -949,8 +1005,9 @@
       sensitivity = Math.max(0.001, Math.min(0.999, parseFloat(sensitivity) || 0.85));
       specificity = Math.max(0.001, Math.min(0.999, parseFloat(specificity) || 0.90));
 
-      const plr = sensitivity / (1 - specificity);
-      const nlr = (1 - sensitivity) / specificity;
+      const plr = sensitivity / Math.max(1e-7, 1 - specificity);
+      const nlr = (1 - sensitivity) / Math.max(1e-7, specificity);
+      const dor = plr / Math.max(1e-7, nlr);
 
       const preTestOdds = preTestProb / (1 - preTestProb);
       const postOddsPos = preTestOdds * plr;
@@ -991,7 +1048,7 @@
       const negHdi95 = MCMCSampler.computeHDI(negSummary.sorted, 0.95);
 
       return {
-        preTestProb, preTestOdds, sensitivity, specificity, plr, nlr,
+        preTestProb, preTestOdds, sensitivity, specificity, plr, nlr, dor,
         postTestPositive: { prob: postProbPos, hdi95: posHdi95 },
         postTestNegative: { prob: postProbNeg, hdi95: negHdi95 }
       };
@@ -1748,6 +1805,12 @@
       const elHdi = document.getElementById("propKpiHdi");
       if (elHdi) elHdi.textContent = `[${hdiLow}%, ${hdiHigh}%]`;
 
+      // Effect Size: Cohen's h
+      const elCohensH = document.getElementById("propKpiCohensH");
+      if (elCohensH) elCohensH.textContent = `h = ${res.sampleStats.cohensH.toFixed(3)}`;
+      const elCohensHLabel = document.getElementById("propKpiCohensHLabel");
+      if (elCohensHLabel) elCohensHLabel.textContent = res.sampleStats.cohensHInterpretation;
+
       const elRR = document.getElementById("propKpiRR");
       if (elRR) elRR.textContent = `${res.relativeRisk.median.toFixed(2)} (95% CrI ${res.relativeRisk.cri95.low.toFixed(2)}–${res.relativeRisk.cri95.high.toFixed(2)})`;
 
@@ -1756,6 +1819,9 @@
 
       const elNNT = document.getElementById("propKpiNNT");
       if (elNNT) elNNT.textContent = res.nnt ? Math.round(res.nnt).toString() : "N/A";
+
+      const elBF = document.getElementById("propKpiBF");
+      if (elBF) elBF.textContent = res.bayesFactor.bf10.toFixed(2);
 
       const badge = document.getElementById("propRopeBadge");
       if (badge) {
@@ -1771,6 +1837,20 @@
       if (bfEl) {
         bfEl.textContent = `BF₁₀ = ${res.bayesFactor.bf10.toFixed(2)} (${res.bayesFactor.interpretation})`;
       }
+
+      // Update dynamic interpretation guide text
+      const elIntSup = document.getElementById("interpPropSup");
+      if (elIntSup) elIntSup.textContent = `${pctSup}%`;
+      const elIntHdi = document.getElementById("interpPropHdi");
+      if (elIntHdi) elIntHdi.textContent = `${hdiLow}% to ${hdiHigh}%`;
+      const elIntH = document.getElementById("interpPropH");
+      if (elIntH) elIntH.textContent = `h = ${res.sampleStats.cohensH.toFixed(3)}, ${res.sampleStats.cohensHInterpretation}`;
+      const elIntNnt = document.getElementById("interpPropNnt");
+      if (elIntNnt) elIntNnt.textContent = res.nnt ? Math.round(res.nnt).toString() : "N/A";
+      const elIntOR = document.getElementById("interpPropOR");
+      if (elIntOR) elIntOR.textContent = res.oddsRatio.median.toFixed(2);
+      const elIntRR = document.getElementById("interpPropRR");
+      if (elIntRR) elIntRR.textContent = res.relativeRisk.median.toFixed(2);
 
       const canvasDiff = document.getElementById("chartPropDiff");
       if (canvasDiff) {
@@ -1788,24 +1868,29 @@
       if (reportBox) {
         reportBox.textContent = `CLINICAL & STATISTICAL BAYESIAN REPORT: TWO PROPORTIONS (A/B)
 ================================================================================
-Sample Data:
-  • Group A (Control): ${res.groupA.kA} / ${res.groupA.nA} (${(res.groupA.kA/res.groupA.nA*100).toFixed(1)}%)
-    Posterior Beta(${res.groupA.posterior.a}, ${res.groupA.posterior.b}): Mean = ${(res.groupA.mean*100).toFixed(1)}%, 95% CrI [${(res.groupA.cri95.low*100).toFixed(1)}%, ${(res.groupA.cri95.high*100).toFixed(1)}%]
-  • Group B (Treatment): ${res.groupB.kB} / ${res.groupB.nB} (${(res.groupB.kB/res.groupB.nB*100).toFixed(1)}%)
-    Posterior Beta(${res.groupB.posterior.a}, ${res.groupB.posterior.b}): Mean = ${(res.groupB.mean*100).toFixed(1)}%, 95% CrI [${(res.groupB.cri95.low*100).toFixed(1)}%, ${(res.groupB.cri95.high*100).toFixed(1)}%]
+ESTIMATION STATISTICS (Sample Data & Empirical Effect Sizes):
+  • Group A (Control): ${res.groupA.kA} / ${res.groupA.nA} events (${(res.sampleStats.rateA*100).toFixed(1)}%)
+  • Group B (Treatment): ${res.groupB.kB} / ${res.groupB.nB} events (${(res.sampleStats.rateB*100).toFixed(1)}%)
+  • Sample Risk Difference (ARR): ${(res.sampleStats.diff*100).toFixed(2)}%
+  • Standardized Effect Size (Cohen's h): ${res.sampleStats.cohensH.toFixed(3)} (${res.sampleStats.cohensHInterpretation})
+  • Relative Risk (RR): ${res.sampleStats.rr.toFixed(3)}
+  • Relative Risk Reduction (RRR): ${res.sampleStats.rrr.toFixed(1)}%
+  • Sample Odds Ratio (OR): ${res.sampleStats.or.toFixed(3)}
+  • Number Needed to Treat (NNT): ${res.nnt ? res.nnt.toFixed(1) : "Undefined"}
 
-Posterior Difference Analysis (Treatment - Control):
+BAYESIAN ANALYSIS (Conjugate Beta Updating & Posterior Estimation):
+  • Group A Posterior Beta(${res.groupA.posterior.a}, ${res.groupA.posterior.b}): Mean = ${(res.groupA.mean*100).toFixed(1)}%, 95% CrI [${(res.groupA.cri95.low*100).toFixed(1)}%, ${(res.groupA.cri95.high*100).toFixed(1)}%]
+  • Group B Posterior Beta(${res.groupB.posterior.a}, ${res.groupB.posterior.b}): Mean = ${(res.groupB.mean*100).toFixed(1)}%, 95% CrI [${(res.groupB.cri95.low*100).toFixed(1)}%, ${(res.groupB.cri95.high*100).toFixed(1)}%]
   • Posterior Mean Difference (ARR): ${(res.difference.mean*100).toFixed(2)}% (SD = ${(res.difference.sd*100).toFixed(2)}%)
   • 95% Highest Density Interval (HDI): [${hdiLow}%, ${hdiHigh}%]
   • Probability of Superiority P(p_B > p_A | data): ${pctSup}%
-  • Relative Risk (RR): ${res.relativeRisk.median.toFixed(3)} [95% HDI: ${res.relativeRisk.hdi95.low.toFixed(3)} to ${res.relativeRisk.hdi95.high.toFixed(3)}]
-  • Odds Ratio (OR): ${res.oddsRatio.median.toFixed(3)} [95% HDI: ${res.oddsRatio.hdi95.low.toFixed(3)} to ${res.oddsRatio.hdi95.high.toFixed(3)}]
-  • Number Needed to Treat (NNT): ${res.nnt ? res.nnt.toFixed(1) : "Undefined"}
+  • Posterior Relative Risk (RR): Median ${res.relativeRisk.median.toFixed(3)} [95% HDI: ${res.relativeRisk.hdi95.low.toFixed(3)} to ${res.relativeRisk.hdi95.high.toFixed(3)}]
+  • Posterior Odds Ratio (OR): Median ${res.oddsRatio.median.toFixed(3)} [95% HDI: ${res.oddsRatio.hdi95.low.toFixed(3)} to ${res.oddsRatio.hdi95.high.toFixed(3)}]
 
-Region of Practical Equivalence (ROPE) [${(res.difference.rope.ropeLow*100).toFixed(1)}%, ${(res.difference.rope.ropeHigh*100).toFixed(1)}%]:
-  • ${res.difference.rope.decision}
-  • ${res.difference.rope.pctIn.toFixed(1)}% in ROPE | ${res.difference.rope.pctAbove.toFixed(1)}% Superior | ${res.difference.rope.pctBelow.toFixed(1)}% Inferior
-  • Bayes Factor BF₁₀: ${res.bayesFactor.bf10.toFixed(2)} (${res.bayesFactor.interpretation})`;
+ROPE Clinical Equivalence [${(res.difference.rope.ropeLow*100).toFixed(1)}%, ${(res.difference.rope.ropeHigh*100).toFixed(1)}%]:
+  • Verdict: ${res.difference.rope.decision}
+  • Mass in ROPE: ${res.difference.rope.pctIn.toFixed(1)}% | Superior: ${res.difference.rope.pctAbove.toFixed(1)}% | Inferior: ${res.difference.rope.pctBelow.toFixed(1)}%
+  • Savage-Dickey Bayes Factor BF₁₀: ${res.bayesFactor.bf10.toFixed(2)} (${res.bayesFactor.interpretation})`;
       }
     },
 
@@ -1863,7 +1948,12 @@ Region of Practical Equivalence (ROPE) [${(res.difference.rope.ropeLow*100).toFi
       if (elHdi) elHdi.textContent = `[${res.difference.hdi95.low.toFixed(2)}, ${res.difference.hdi95.high.toFixed(2)}]`;
 
       const elCohen = document.getElementById("meansKpiCohensD");
-      if (elCohen) elCohen.textContent = `${res.cohensD.median.toFixed(2)} (95% HDI ${res.cohensD.hdi95.low.toFixed(2)}–${res.cohensD.hdi95.high.toFixed(2)})`;
+      if (elCohen) elCohen.textContent = `d = ${res.sampleStats.cohensD.toFixed(3)}`;
+      const elCohenLabel = document.getElementById("meansKpiCohensDLabel");
+      if (elCohenLabel) elCohenLabel.textContent = res.sampleStats.cohensDInterpretation;
+
+      const elCLES = document.getElementById("meansKpiCLES");
+      if (elCLES) elCLES.textContent = `${(res.sampleStats.cles * 100).toFixed(1)}%`;
 
       const elSdRatio = document.getElementById("meansKpiSdRatio");
       if (elSdRatio) elSdRatio.textContent = `${res.sdRatio.median.toFixed(2)} (95% HDI ${res.sdRatio.hdi95.low.toFixed(2)}–${res.sdRatio.hdi95.high.toFixed(2)})`;
@@ -1880,6 +1970,16 @@ Region of Practical Equivalence (ROPE) [${(res.difference.rope.ropeLow*100).toFi
       if (ropeDetail) {
         ropeDetail.textContent = `${res.difference.rope.decisionDetail} (${res.difference.rope.pctIn.toFixed(1)}% in ROPE, ${res.difference.rope.pctAbove.toFixed(1)}% above, ${res.difference.rope.pctBelow.toFixed(1)}% below).`;
       }
+
+      // Update dynamic interpretation guide
+      const elIntDiff = document.getElementById("interpMeansDiff");
+      if (elIntDiff) elIntDiff.textContent = `${res.difference.mean.toFixed(2)} units (95% HDI [${res.difference.hdi95.low.toFixed(2)}, ${res.difference.hdi95.high.toFixed(2)}])`;
+      const elIntD = document.getElementById("interpMeansD");
+      if (elIntD) elIntD.textContent = `${res.sampleStats.cohensD.toFixed(3)} (${res.sampleStats.cohensDInterpretation})`;
+      const elIntCles = document.getElementById("interpMeansCles");
+      if (elIntCles) elIntCles.textContent = `${(res.sampleStats.cles * 100).toFixed(1)}%`;
+      const elIntBF = document.getElementById("interpMeansBF");
+      if (elIntBF) elIntBF.textContent = res.bayesFactor.bf10.toFixed(2);
 
       const canvasDiff = document.getElementById("chartMeansDiff");
       if (canvasDiff) {
@@ -1914,19 +2014,23 @@ Region of Practical Equivalence (ROPE) [${(res.difference.rope.ropeLow*100).toFi
       if (reportBox) {
         reportBox.textContent = `CLINICAL & STATISTICAL BAYESIAN REPORT: TWO CONTINUOUS MEANS (BEST)
 ================================================================================
-Sample Statistics:
-  • Group A (Control): N = ${res.groupA.n}, Mean = ${res.groupA.mean.toFixed(2)}, SD = ${res.groupA.sd.toFixed(2)} (95% CrI [${res.groupA.cri95.low.toFixed(2)}, ${res.groupA.cri95.high.toFixed(2)}])
-  • Group B (Treatment): N = ${res.groupB.n}, Mean = ${res.groupB.mean.toFixed(2)}, SD = ${res.groupB.sd.toFixed(2)} (95% CrI [${res.groupB.cri95.low.toFixed(2)}, ${res.groupB.cri95.high.toFixed(2)}])
+ESTIMATION STATISTICS (Sample Data & Empirical Effect Sizes):
+  • Group A (Control): N = ${res.groupA.n}, Mean = ${res.groupA.mean.toFixed(2)}, SD = ${res.groupA.sd.toFixed(2)} (SEM = ${res.groupA.sem.toFixed(2)})
+  • Group B (Treatment): N = ${res.groupB.n}, Mean = ${res.groupB.mean.toFixed(2)}, SD = ${res.groupB.sd.toFixed(2)} (SEM = ${res.groupB.sem.toFixed(2)})
+  • Sample Mean Difference: ${res.sampleStats.diff.toFixed(3)}
+  • Standardized Effect Size (Cohen's d): ${res.sampleStats.cohensD.toFixed(3)} (${res.sampleStats.cohensDInterpretation})
+  • Glass's Delta (relative to control): ${res.sampleStats.glassDelta.toFixed(3)}
+  • Common Language Effect Size (CLES): ${(res.sampleStats.cles*100).toFixed(1)}% probability that a random patient from B scores higher than A
 
-Bayesian Mean Difference (μ_B - μ_A):
+BAYESIAN ANALYSIS (Unequal Variances BEST Updating & Posterior Estimation):
   • Posterior Mean Difference: ${res.difference.mean.toFixed(3)} (SD = ${res.difference.sd.toFixed(3)})
   • 95% Highest Density Interval (HDI): [${res.difference.hdi95.low.toFixed(3)}, ${res.difference.hdi95.high.toFixed(3)}]
   • Probability of Superiority P(μ_B > μ_A | data): ${pctSup}%
-  • Bayesian Cohen's d: ${res.cohensD.median.toFixed(3)} [95% HDI: ${res.cohensD.hdi95.low.toFixed(3)} to ${res.cohensD.hdi95.high.toFixed(3)}]
-  • Standard Deviation Ratio (σ_B / σ_A): ${res.sdRatio.median.toFixed(3)} [95% HDI: ${res.sdRatio.hdi95.low.toFixed(3)} to ${res.sdRatio.hdi95.high.toFixed(3)}]
+  • Posterior Bayesian Cohen's d: Median ${res.cohensD.median.toFixed(3)} [95% HDI: ${res.cohensD.hdi95.low.toFixed(3)} to ${res.cohensD.hdi95.high.toFixed(3)}]
+  • Standard Deviation Ratio (σ_B / σ_A): Median ${res.sdRatio.median.toFixed(3)} [95% HDI: ${res.sdRatio.hdi95.low.toFixed(3)} to ${res.sdRatio.hdi95.high.toFixed(3)}]
 
-Bayesian Model Comparison & ROPE [${res.difference.rope.ropeLow}, ${res.difference.rope.ropeHigh}]:
-  • Decision: ${res.difference.rope.decision}
+ROPE Clinical Equivalence Verdict [${res.difference.rope.ropeLow}, ${res.difference.rope.ropeHigh}]:
+  • Verdict: ${res.difference.rope.decision}
   • JZS Bayes Factor BF₁₀: ${res.bayesFactor.bf10.toFixed(2)} (${res.bayesFactor.interpretation})`;
       }
     },
@@ -1955,11 +2059,17 @@ Bayesian Model Comparison & ROPE [${res.difference.rope.ropeLow}, ${res.differen
       const elHdi = document.getElementById("spKpiHdi");
       if (elHdi) elHdi.textContent = `[${(res.posterior.hdi95.low * 100).toFixed(2)}%, ${(res.posterior.hdi95.high * 100).toFixed(2)}%]`;
 
+      const elEffectH = document.getElementById("spKpiEffectH");
+      if (elEffectH) elEffectH.textContent = `h = ${res.effectH.toFixed(3)}`;
+
+      const elEffectHLabel = document.getElementById("spKpiEffectHLabel");
+      if (elEffectHLabel) {
+        const absH = Math.abs(res.effectH);
+        elEffectHLabel.textContent = absH >= 0.5 ? "Medium/Large Effect" : absH >= 0.2 ? "Small Effect" : "Negligible Effect";
+      }
+
       const elBench = document.getElementById("spKpiProbBench");
       if (elBench) elBench.textContent = `${(res.benchmark.probExceed * 100).toFixed(1)}%`;
-
-      const elPostA = document.getElementById("spKpiPostA");
-      if (elPostA) elPostA.textContent = `Beta(${res.posterior.a}, ${res.posterior.b})`;
 
       const canvas = document.getElementById("chartSingleProp");
       if (canvas) {
@@ -1992,11 +2102,17 @@ Bayesian Model Comparison & ROPE [${res.difference.rope.ropeLow}, ${res.differen
       const elHdi = document.getElementById("smKpiHdi");
       if (elHdi) elHdi.textContent = `[${res.posterior.cri95.low.toFixed(2)}, ${res.posterior.cri95.high.toFixed(2)}]`;
 
+      const elEffectD = document.getElementById("smKpiEffectD");
+      if (elEffectD) elEffectD.textContent = `d = ${res.sample.effectD.toFixed(3)}`;
+
+      const elEffectDLabel = document.getElementById("smKpiEffectDLabel");
+      if (elEffectDLabel) {
+        const absD = Math.abs(res.sample.effectD);
+        elEffectDLabel.textContent = absD >= 0.8 ? "Large Effect" : absD >= 0.5 ? "Medium Effect" : absD >= 0.2 ? "Small Effect" : "Negligible";
+      }
+
       const elBench = document.getElementById("smKpiProbBench");
       if (elBench) elBench.textContent = `${(res.benchmark.probExceed * 100).toFixed(1)}%`;
-
-      const elPostSd = document.getElementById("smKpiPostSd");
-      if (elPostSd) elPostSd.textContent = `SD = ${res.posterior.sd.toFixed(2)}`;
 
       const canvas = document.getElementById("chartSingleMean");
       if (canvas) {
@@ -2023,8 +2139,21 @@ Bayesian Model Comparison & ROPE [${res.difference.rope.ropeLow}, ${res.differen
       const elPLR = document.getElementById("diagKpiPLR");
       if (elPLR) elPLR.textContent = res.plr.toFixed(2);
 
+      const elPLRLabel = document.getElementById("diagKpiPLRLabel");
+      if (elPLRLabel) {
+        elPLRLabel.textContent = res.plr >= 10 ? "Large Shift (LR+ ≥ 10)" : res.plr >= 5 ? "Moderate Shift" : "Small Shift";
+      }
+
       const elNLR = document.getElementById("diagKpiNLR");
       if (elNLR) elNLR.textContent = res.nlr.toFixed(3);
+
+      const elNLRLabel = document.getElementById("diagKpiNLRLabel");
+      if (elNLRLabel) {
+        elNLRLabel.textContent = res.nlr <= 0.1 ? "Large Shift (LR- ≤ 0.1)" : res.nlr <= 0.2 ? "Moderate Shift" : "Small Shift";
+      }
+
+      const elDOR = document.getElementById("diagKpiDOR");
+      if (elDOR) elDOR.textContent = res.dor.toFixed(1);
 
       const elPostPos = document.getElementById("diagKpiPostPos");
       if (elPostPos) elPostPos.textContent = `${(res.postTestPositive.prob * 100).toFixed(1)}% (95% HDI ${(res.postTestPositive.hdi95.low * 100).toFixed(1)}–${(res.postTestPositive.hdi95.high * 100).toFixed(1)}%)`;

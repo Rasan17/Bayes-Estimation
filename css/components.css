@@ -456,3 +456,182 @@ select.input-field {
   align-items: center;
   gap: 12px;
 }
+/* ==========================================================================
+   Methodology Color Legend Banner
+   ========================================================================== */
+.methodology-legend-banner {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  margin-bottom: 22px;
+  box-shadow: var(--shadow-sm);
+}
+
+.legend-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  flex: 1;
+  min-width: 300px;
+}
+
+.legend-chip-green {
+  background: var(--calc-bg-card);
+  border: 1.5px solid var(--calc-border);
+  color: var(--text-main);
+}
+
+.legend-chip-blue {
+  background: var(--stats-bg-card);
+  border: 1.5px solid var(--stats-border);
+  color: var(--text-main);
+}
+
+.legend-swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.swatch-green {
+  background: #10b981;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.3);
+}
+
+.swatch-blue {
+  background: #0284c7;
+  box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.3);
+}
+
+.legend-title {
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.legend-chip-green .legend-title {
+  color: var(--calc-header);
+}
+
+.legend-chip-blue .legend-title {
+  color: var(--stats-header);
+}
+
+.legend-desc {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* ==========================================================================
+   Interpretation Box: What Results Mean & What They Do NOT Mean
+   ========================================================================== */
+.interpretation-card {
+  background: var(--bg-surface-elevated) !important;
+  border: 1.5px solid var(--border-strong) !important;
+  border-radius: var(--radius-lg);
+  padding: 20px 22px;
+  margin-top: 20px;
+  box-shadow: var(--shadow-sm);
+}
+
+.interpretation-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.interpretation-title {
+  font-size: 15.5px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-main);
+}
+
+.interpretation-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 900px) {
+  .interpretation-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.interp-box {
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.interp-means {
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: var(--text-main);
+}
+
+.interp-not-means {
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: var(--text-main);
+}
+
+.interp-box-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 800;
+  font-size: 13.5px;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.interp-means .interp-box-title {
+  color: #10b981;
+}
+
+.interp-not-means .interp-box-title {
+  color: #ef4444;
+}
+
+.interp-box ul {
+  padding-left: 20px;
+  margin: 0;
+}
+
+.interp-box li {
+  margin-bottom: 8px;
+}
+
+.interp-box li:last-child {
+  margin-bottom: 0;
+}
+
+/* Effect Size Callout in KPI Cards */
+.kpi-effect-badge {
+  display: inline-block;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(2, 132, 199, 0.15);
+  color: var(--stats-header);
+  margin-top: 4px;
+  align-self: flex-start;
+}
